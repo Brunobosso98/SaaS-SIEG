@@ -1,172 +1,177 @@
 
-import { ArrowRight, Check } from "lucide-react";
+import { useState } from "react";
+import { Check, Download, BarChart2, Settings, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Layout } from "@/components/Layout";
 
-type PlanFeature = {
+interface PlanFeature {
   text: string;
   included: boolean;
-};
+}
 
-type PlanProps = {
+interface Plan {
   name: string;
   price: string;
   description: string;
   features: PlanFeature[];
-  popular?: boolean;
   buttonText: string;
-  buttonLink: string;
-};
-
-const Plan = ({ name, price, description, features, popular, buttonText, buttonLink }: PlanProps) => {
-  return (
-    <div className={`rounded-2xl p-6 ${popular ? "bg-primary text-primary-foreground" : "bg-card"} border ${popular ? "border-primary" : "border-border"} flex flex-col h-full relative animate-scale-in`}>
-      {popular && (
-        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-          <span className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full">
-            Mais popular
-          </span>
-        </div>
-      )}
-      <div className="mb-4">
-        <h3 className="text-xl font-medium mb-1">{name}</h3>
-        <p className={`text-sm ${popular ? "text-primary-foreground/80" : "text-muted-foreground"} mb-4`}>
-          {description}
-        </p>
-        <div className="flex items-baseline gap-1 mb-2">
-          <span className="text-3xl font-bold">{price}</span>
-          <span className={`${popular ? "text-primary-foreground/80" : "text-muted-foreground"} text-sm`}>
-            /mês
-          </span>
-        </div>
-      </div>
-
-      <ul className="space-y-3 my-6 flex-grow">
-        {features.map((feature, index) => (
-          <li key={index} className="flex items-start gap-2">
-            <div className={`rounded-full p-1 ${popular ? "bg-primary-foreground/20" : "bg-primary/10"}`}>
-              <Check className={`h-3 w-3 ${popular ? "text-primary-foreground" : "text-primary"}`} />
-            </div>
-            <span className="text-sm">{feature.text}</span>
-          </li>
-        ))}
-      </ul>
-
-      <Button
-        asChild
-        className={`w-full rounded-full ${!popular ? "bg-primary text-primary-foreground" : "bg-primary-foreground text-primary"} transition-all duration-300 hover:translate-y-[-2px]`}
-      >
-        <Link to={buttonLink}>
-          {buttonText}
-          <ArrowRight className="ml-1 h-4 w-4" />
-        </Link>
-      </Button>
-    </div>
-  );
-};
+  popular?: boolean;
+  maxCNPJs: number;
+  scheduleOptions: string[];
+}
 
 export function PlansPage() {
-  const plans = [
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+
+  const plans: Plan[] = [
     {
-      name: "Básico",
-      price: "R$ 30",
-      description: "Para pequenos escritórios",
+      name: "Starter",
+      price: billingCycle === "monthly" ? "R$ 97/mês" : "R$ 970/ano",
+      description: "Ideal para contadores autônomos com poucos clientes.",
+      maxCNPJs: 3,
+      scheduleOptions: ["1x ao dia"],
       features: [
-        { text: "1 CNPJ", included: true },
-        { text: "Download automático diário", included: true },
-        { text: "Armazenamento por 30 dias", included: true },
-        { text: "Suporte por e-mail", included: true },
-        { text: "Notificações por e-mail", included: false },
-        { text: "API para integração", included: false },
+        { text: "Até 3 CNPJs", included: true },
+        { text: "Download automático 1x ao dia", included: true },
+        { text: "7 dias de retenção de arquivos", included: true },
+        { text: "Suporte por email", included: true },
+        { text: "Relatórios básicos", included: true },
+        { text: "Download manual", included: true },
+        { text: "Múltiplos horários de download", included: false },
+        { text: "Suporte prioritário", included: false },
+        { text: "Acesso a API", included: false },
       ],
-      popular: false,
-      buttonText: "Começar agora",
-      buttonLink: "/register",
+      buttonText: "Começar grátis",
     },
     {
-      name: "Profissional",
-      price: "R$ 97",
-      description: "Para escritórios médios",
+      name: "Professional",
+      price: billingCycle === "monthly" ? "R$ 197/mês" : "R$ 1970/ano",
+      description: "Para escritórios de contabilidade em crescimento.",
+      maxCNPJs: 10,
+      scheduleOptions: ["1x ao dia", "2x ao dia"],
+      popular: true,
       features: [
         { text: "Até 10 CNPJs", included: true },
-        { text: "Download automático diário", included: true },
-        { text: "Armazenamento por 90 dias", included: true },
+        { text: "Download automático 2x ao dia", included: true },
+        { text: "30 dias de retenção de arquivos", included: true },
         { text: "Suporte prioritário", included: true },
-        { text: "Notificações por e-mail", included: true },
-        { text: "API para integração", included: false },
+        { text: "Relatórios avançados", included: true },
+        { text: "Download manual", included: true },
+        { text: "Múltiplos horários de download", included: true },
+        { text: "Acesso a API", included: false },
+        { text: "White label", included: false },
       ],
-      popular: true,
       buttonText: "Escolher plano",
-      buttonLink: "/register",
     },
     {
-      name: "Empresarial",
-      price: "R$ 247",
-      description: "Para grandes escritórios",
+      name: "Enterprise",
+      price: billingCycle === "monthly" ? "R$ 297/mês" : "R$ 2970/ano",
+      description: "Para grandes escritórios com muitos clientes.",
+      maxCNPJs: 30,
+      scheduleOptions: ["1x ao dia", "2x ao dia", "4x ao dia", "Personalizado"],
       features: [
-        { text: "CNPJs ilimitados", included: true },
-        { text: "Download automático horário", included: true },
-        { text: "Armazenamento por 1 ano", included: true },
-        { text: "Suporte 24/7", included: true },
-        { text: "Notificações por e-mail", included: true },
-        { text: "API para integração", included: true },
+        { text: "Até 30 CNPJs", included: true },
+        { text: "Download automático 4x ao dia", included: true },
+        { text: "90 dias de retenção de arquivos", included: true },
+        { text: "Suporte dedicado", included: true },
+        { text: "Relatórios personalizados", included: true },
+        { text: "Download manual ilimitado", included: true },
+        { text: "Múltiplos horários de download", included: true },
+        { text: "Acesso a API", included: true },
+        { text: "White label", included: true },
       ],
-      popular: false,
-      buttonText: "Contatar vendas",
-      buttonLink: "/register",
+      buttonText: "Contato comercial",
     },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="w-full py-4 px-8 flex justify-between items-center border-b border-border/30">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="rounded-md bg-primary p-1">
-            <Download className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-semibold">XMLFiscal</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <Link to="/login" className="text-sm hover:underline">
-            Entrar
-          </Link>
-          <ThemeToggle />
-          <Button asChild className="rounded-full px-5 transition-all duration-300 hover:translate-y-[-2px]">
-            <Link to="/register">Cadastrar</Link>
-          </Button>
-        </div>
-      </header>
-
-      <main className="flex-1 py-16 px-8 max-w-6xl mx-auto">
+    <Layout>
+      <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 animate-slide-in">Escolha o plano ideal para seu escritório</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-in">
-            Automatize o download de XMLs e economize tempo e recursos com nossos planos flexíveis.
+          <h1 className="text-4xl font-bold mb-4">Planos e Preços</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Escolha o plano que melhor atende às necessidades do seu escritório de contabilidade.
           </p>
+          
+          <div className="mt-6 inline-flex items-center rounded-full border p-1 bg-muted/50">
+            <Button
+              variant={billingCycle === "monthly" ? "default" : "ghost"}
+              className="rounded-full px-4"
+              onClick={() => setBillingCycle("monthly")}
+            >
+              Mensal
+            </Button>
+            <Button
+              variant={billingCycle === "annual" ? "default" : "ghost"}
+              className="rounded-full px-4"
+              onClick={() => setBillingCycle("annual")}
+            >
+              Anual <span className="ml-1 text-xs font-normal">(-15%)</span>
+            </Button>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {plans.map((plan, index) => (
-            <Plan key={index} {...plan} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {plans.map((plan) => (
+            <Card
+              key={plan.name}
+              className={`flex flex-col h-full border-2 ${
+                plan.popular ? "border-primary" : "border-border"
+              } transition-all duration-300 hover:shadow-lg ${
+                plan.popular ? "scale-105 shadow-md" : ""
+              }`}
+            >
+              {plan.popular && (
+                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-bl-md rounded-tr-md font-medium">
+                  Mais Popular
+                </div>
+              )}
+              <CardHeader>
+                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                <div className="mt-2">
+                  <span className="text-3xl font-bold">{plan.price}</span>
+                </div>
+                <CardDescription className="mt-2">{plan.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <ul className="space-y-3">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <span
+                        className={`mr-2 mt-1 flex h-4 w-4 items-center justify-center rounded-full ${
+                          feature.included ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {feature.included ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <span className="h-0.5 w-0.5 rounded-full bg-current"></span>
+                        )}
+                      </span>
+                      <span
+                        className={
+                          feature.included ? "text-foreground" : "text-muted-foreground"
+                        }
+                      >
+                        {feature.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  variant={plan.popular ? "default" : "outline"}
+                  className="w-full"
+                >
+                  {plan.buttonText}
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
-
-        <div className="mt-16 text-center p-8 border border-border/50 rounded-2xl glass-card max-w-3xl mx-auto animate-fade-in">
-          <h2 className="text-2xl font-semibold mb-4">Precisa de um plano personalizado?</h2>
-          <p className="text-muted-foreground mb-6">
-            Entre em contato com nossa equipe de vendas para criar um plano que atenda às necessidades específicas do seu escritório.
-          </p>
-          <Button asChild className="rounded-full px-6 transition-all duration-300 hover:translate-y-[-2px]">
-            <Link to="/contact">Falar com um consultor</Link>
-          </Button>
-        </div>
-      </main>
-
-      <footer className="w-full py-8 px-8 border-t border-border/30">
-        <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} XMLFiscal. Todos os direitos reservados.
-        </div>
-      </footer>
-    </div>
+      </div>
+    </Layout>
   );
 }

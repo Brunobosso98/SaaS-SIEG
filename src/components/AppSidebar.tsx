@@ -1,5 +1,5 @@
 
-import { BarChart2, Download, Home, LogOut, Settings, Users } from "lucide-react";
+import { BarChart2, Download, Home, LogOut, Settings, Users, FileText, Calendar } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
