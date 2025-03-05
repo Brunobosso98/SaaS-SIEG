@@ -1,5 +1,5 @@
 
-import { ArrowRight, CheckCircle, Download } from "lucide-react";
+import { ArrowRight, BarChart2, CheckCircle, Download, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
