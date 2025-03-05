@@ -1,8 +1,9 @@
 
-import { ArrowRight, BarChart2, CheckCircle, Download, Users } from "lucide-react";
+import { ArrowRight, BarChart2, CheckCircle, Download, Users, Clock, FileCheck, Zap, AreaChart, PieChart, Box, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function LandingPage() {
   return (
@@ -49,10 +50,63 @@ export function LandingPage() {
           </div>
 
           <div className="relative w-full max-w-4xl mx-auto aspect-video overflow-hidden rounded-xl border border-border/50 shadow-xl animate-scale-in">
-            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10 opacity-40" />
             <div className="bg-gradient-to-br from-secondary to-background absolute inset-0 opacity-50" />
-            <div className="absolute inset-0 flex items-center justify-center text-4xl font-semibold">
-              Dashboard preview
+            <div className="absolute inset-0 p-8 flex flex-col items-center justify-center">
+              <div className="grid grid-cols-2 gap-4 w-full max-w-3xl">
+                <Card className="glass shadow-sm border-primary/10">
+                  <CardContent className="p-4 flex items-center space-x-4">
+                    <div className="rounded-full bg-primary/10 p-3">
+                      <AreaChart className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Downloads Mensais</h3>
+                      <p className="text-2xl font-bold">12,583</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-sm border-primary/10">
+                  <CardContent className="p-4 flex items-center space-x-4">
+                    <div className="rounded-full bg-primary/10 p-3">
+                      <PieChart className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Taxa de Sucesso</h3>
+                      <p className="text-2xl font-bold">99.8%</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-sm border-primary/10">
+                  <CardContent className="p-4 flex items-center space-x-4">
+                    <div className="rounded-full bg-primary/10 p-3">
+                      <FileText className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">XMLs Processados</h3>
+                      <p className="text-2xl font-bold">3.2M+</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-sm border-primary/10">
+                  <CardContent className="p-4 flex items-center space-x-4">
+                    <div className="rounded-full bg-primary/10 p-3">
+                      <Users className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Clientes</h3>
+                      <p className="text-2xl font-bold">750+</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="mt-8 w-full max-w-3xl">
+                <div className="w-full h-12 rounded-md bg-secondary/30 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 h-full w-3/4 bg-primary/30 rounded-md flex items-center justify-center">
+                    <span className="text-sm font-medium">Processamento: 75%</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -90,6 +144,86 @@ export function LandingPage() {
                 <p className="text-muted-foreground">{feature.description}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="py-16 px-8 bg-secondary/30">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">Resultados que transformam</h2>
+            
+            <div className="grid md:grid-cols-4 gap-8">
+              {[
+                {
+                  number: "85%",
+                  text: "Redução no tempo de processamento",
+                  icon: Clock,
+                },
+                {
+                  number: "100%",
+                  text: "Precisão nos downloads",
+                  icon: CheckCircle,
+                },
+                {
+                  number: "24/7",
+                  text: "Disponibilidade do sistema",
+                  icon: Zap,
+                },
+                {
+                  number: "3.2M+",
+                  text: "XMLs processados",
+                  icon: FileCheck,
+                },
+              ].map((stat, index) => (
+                <div 
+                  key={index} 
+                  className="text-center p-6 animate-fade-in"
+                  style={{ animationDelay: `${index * 150}ms` }}
+                >
+                  <div className="mx-auto rounded-full bg-primary/10 p-4 w-16 h-16 flex items-center justify-center mb-4">
+                    <stat.icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <p className="text-4xl font-bold mb-2">{stat.number}</p>
+                  <p className="text-muted-foreground">{stat.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-20 px-8 max-w-6xl mx-auto">
+          <div className="rounded-2xl glass-card p-8 md:p-12">
+            <div className="md:flex items-center justify-between">
+              <div className="mb-8 md:mb-0 md:max-w-lg">
+                <h2 className="text-3xl font-bold mb-4">Pronto para automatizar seus downloads?</h2>
+                <p className="text-muted-foreground mb-6">
+                  Junte-se a mais de 750 empresas que economizam tempo e recursos com o XMLFiscal.
+                </p>
+                <Button asChild size="lg" className="rounded-full px-8">
+                  <Link to="/register">
+                    Começar agora
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2 text-sm">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                  <span>Instalação fácil</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                  <span>Suporte técnico</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                  <span>Sem complexidade</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                  <span>Economia de tempo</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>

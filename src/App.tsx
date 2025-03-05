@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/context/ThemeProvider";
 import { LandingPage } from "@/pages/LandingPage";
 import { PlansPage } from "@/pages/PlansPage";
 import { AuthPage } from "@/pages/AuthPage";
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { Dashboard } from "@/pages/Dashboard";
 import { ReportsPage } from "@/pages/ReportsPage";
 import { DownloadsPage } from "@/pages/DownloadsPage";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/plans" element={<PlansPage />} />
             <Route path="/login" element={<AuthPage type="login" />} />
             <Route path="/register" element={<AuthPage type="register" />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/downloads" element={<DownloadsPage />} />
