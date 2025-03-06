@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/hooks/use-toast";
 import { FileCheck } from "lucide-react";
 
 interface DocumentType {

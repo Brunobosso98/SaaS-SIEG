@@ -7,7 +7,7 @@ import { SiegKeyForm } from "@/components/SiegKeyForm";
 import { CNPJManagement } from "@/components/CNPJManagement";
 import { DownloadHistory } from "@/components/DownloadHistory";
 import { useState } from "react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/hooks/use-toast";
 import { DocumentTypeSelector } from "@/components/DocumentTypeSelector";
 
 export function Dashboard() {
