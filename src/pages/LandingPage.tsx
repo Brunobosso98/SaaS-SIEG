@@ -65,7 +65,7 @@ export function LandingPage() {
             Automatize o download de XMLs
           </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance mb-6 animate-slide-in">
-            Baixe XMLs de notas fiscais <br /> com apenas alguns cliques
+            Baixe XMLs de documentos fiscais <br /> com apenas alguns cliques
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: "200ms" }}>
             Economize tempo e recursos automatizando o download de XMLs do SIEG para escritórios de contabilidade.
