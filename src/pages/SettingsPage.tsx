@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, Key, Lock, User, Mail, CheckCircle, Clock, LogOut, Shield, Database, Calendar } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScheduleSettings } from "@/components/ScheduleSettings";
 
 export function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +73,7 @@ export function SettingsPage() {
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="security">Segurança</TabsTrigger>
             <TabsTrigger value="notifications">Notificações</TabsTrigger>
+            <TabsTrigger value="schedule">Agendamento</TabsTrigger>
             <TabsTrigger value="integrations">Integrações</TabsTrigger>
             <TabsTrigger value="billing">Assinatura</TabsTrigger>
           </TabsList>
@@ -356,6 +358,10 @@ export function SettingsPage() {
                 </Button>
               </CardFooter>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="schedule">
+            <ScheduleSettings />
           </TabsContent>
 
           <TabsContent value="integrations">
