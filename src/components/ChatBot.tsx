@@ -17,23 +17,16 @@ interface Message {
   content: string;
 }
 
+// This would be set in a real environment variable
+const DEFAULT_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || "";
+
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [apiKey, setApiKey] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const localStorageKeyName = "openai_api_key";
-
-  useEffect(() => {
-    // Check local storage for API key
-    const storedApiKey = localStorage.getItem(localStorageKeyName);
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-    }
-  }, []);
 
   useEffect(() => {
     // Scroll to bottom of messages when new messages are added
@@ -62,26 +55,6 @@ export function ChatBot() {
     setIsMinimized(!isMinimized);
   };
 
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setApiKey(e.target.value);
-  };
-
-  const saveApiKey = () => {
-    if (apiKey.trim().length > 0) {
-      localStorage.setItem(localStorageKeyName, apiKey);
-      toast({
-        title: "API Key salva",
-        description: "Sua chave da OpenAI foi salva no navegador.",
-      });
-    } else {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma chave API válida.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const sendMessage = async () => {
     if (input.trim() === "") return;
     
@@ -92,15 +65,15 @@ export function ChatBot() {
     setIsLoading(true);
 
     try {
-      if (!apiKey) {
-        throw new Error("API key not provided");
+      if (!DEFAULT_API_KEY) {
+        throw new Error("API key not configured");
       }
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${DEFAULT_API_KEY}`,
         },
         body: JSON.stringify({
           model: "gpt-4o-mini",
@@ -146,10 +119,10 @@ export function ChatBot() {
       console.error("Error:", error);
       let errorMessage = "Ocorreu um erro ao processar sua solicitação.";
       
-      if ((error as Error).message === "API key not provided") {
-        errorMessage = "Por favor, insira sua chave da API da OpenAI nas configurações do chat.";
+      if ((error as Error).message === "API key not configured") {
+        errorMessage = "A chave API da OpenAI não está configurada. Por favor, configure a variável de ambiente VITE_OPENAI_API_KEY.";
       } else if ((error as Error).message.includes("401")) {
-        errorMessage = "Chave de API inválida. Por favor, verifique sua chave da OpenAI.";
+        errorMessage = "Chave de API inválida. Por favor, verifique a chave da OpenAI.";
       }
       
       setMessages((prev) => [
@@ -170,13 +143,13 @@ export function ChatBot() {
 
   return (
     <>
-      {/* Chat Button */}
+      {/* Chat Button - Improved design with gradient and animation */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 right-6 bg-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-primary/90 transition-all z-50 hover:scale-110"
+        className="fixed bottom-6 right-6 bg-gradient-to-r from-primary to-primary/80 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-primary/20 transition-all z-50 hover:scale-110 animate-pulse hover:animate-none"
         aria-label="Chat bot"
       >
-        <MessageCircle className="w-6 h-6" />
+        <Bot className="w-6 h-6" />
       </button>
 
       {/* Chat Window */}
@@ -189,7 +162,7 @@ export function ChatBot() {
           }`}
         >
           {/* Chat Header */}
-          <div className="flex items-center justify-between bg-primary text-primary-foreground p-3 rounded-t-lg">
+          <div className="flex items-center justify-between bg-gradient-to-r from-primary to-primary/90 text-primary-foreground p-3 rounded-t-lg">
             <div className="flex items-center gap-2">
               <Bot className="w-5 h-5" />
               <h3 className="font-medium">Assistente XMLFiscal</h3>
@@ -214,29 +187,8 @@ export function ChatBot() {
 
           {!isMinimized && (
             <>
-              {/* API Key Input (show only if no API key) */}
-              {!apiKey && (
-                <div className="p-3 border-b border-border">
-                  <div className="text-sm mb-2">
-                    Para usar o chat, insira sua chave da API da OpenAI:
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="password"
-                      placeholder="sk-..."
-                      value={apiKey}
-                      onChange={handleApiKeyChange}
-                      className="flex-1 text-xs"
-                    />
-                    <Button size="sm" onClick={saveApiKey}>
-                      Salvar
-                    </Button>
-                  </div>
-                </div>
-              )}
-
               {/* Chat Messages */}
-              <div className="flex-1 p-3 overflow-y-auto h-[370px]">
+              <div className="flex-1 p-3 overflow-y-auto h-[370px] bg-gradient-to-b from-background to-background/95">
                 {messages.map((message, index) => (
                   <div
                     key={index}
@@ -273,17 +225,23 @@ export function ChatBot() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    disabled={isLoading || !apiKey}
+                    disabled={isLoading || !DEFAULT_API_KEY}
                     className="flex-1"
                   />
                   <Button
                     size="icon"
                     onClick={sendMessage}
-                    disabled={isLoading || !apiKey || input.trim() === ""}
+                    disabled={isLoading || !DEFAULT_API_KEY || input.trim() === ""}
+                    className="bg-primary hover:bg-primary/90"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
+                {!DEFAULT_API_KEY && (
+                  <p className="text-xs text-destructive mt-2">
+                    Por favor, configure a variável de ambiente VITE_OPENAI_API_KEY para usar o chat.
+                  </p>
+                )}
               </div>
             </>
           )}
