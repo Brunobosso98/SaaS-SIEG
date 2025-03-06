@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useRef } from "react";
+import { ChatBot } from "@/components/ChatBot";
 
 export function LandingPage() {
   const statsRef = useRef<HTMLDivElement>(null);
@@ -264,6 +265,9 @@ export function LandingPage() {
           © {new Date().getFullYear()} XMLFiscal. Todos os direitos reservados.
         </div>
       </footer>
+
+      {/* Add ChatBot component */}
+      <ChatBot />
     </div>
   );
 }
