@@ -30,7 +30,7 @@ app.use('/api/xml', xmlRoutes);
 
 // Root route
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to XMLFiscal API' });
+  res.json({ message: 'Bem vindo ao XMLFiscal API' });
 });
 
 // Start server
