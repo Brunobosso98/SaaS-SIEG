@@ -79,5 +79,18 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
-  }
+  },
+  "description": "**URL**: https://lovable.dev/projects/bdcf0072-382f-463c-91f8-d3c290a57ebc",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brunobosso98/SaaS-SIEG.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Brunobosso98/SaaS-SIEG/issues"
+  },
+  "homepage": "https://github.com/Brunobosso98/SaaS-SIEG#readme"
 }
