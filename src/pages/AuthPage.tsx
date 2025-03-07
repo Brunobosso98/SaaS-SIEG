@@ -1,10 +1,13 @@
 
 import { useState } from "react";
-import { ArrowRight, Download, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Download, Mail, Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/context/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthPageProps {
   type: "login" | "register";
@@ -15,14 +18,38 @@ export function AuthPage({ type }: AuthPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { login, register } = useAuth();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage(null);
     
-    // In a real app, we would handle authentication here
-    // For now, we'll just navigate to the dashboard
-    navigate("/dashboard");
+    try {
+      if (type === "login") {
+        await login(email, password);
+        toast({
+          title: "Login realizado com sucesso",
+          description: "Bem-vindo de volta!"
+        });
+      } else {
+        await register(name, email, password);
+        toast({
+          title: "Conta criada com sucesso",
+          description: "Verifique seu email para ativar sua conta."
+        });
+      }
+      navigate("/dashboard");
+    } catch (error: any) {
+      setErrorMessage(error.response?.data?.message || 
+        (type === "login" ? "Falha ao fazer login. Verifique suas credenciais." : "Falha ao criar conta. Tente novamente."));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -56,6 +83,13 @@ export function AuthPage({ type }: AuthPageProps) {
             </p>
           </div>
 
+          {errorMessage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             {type === "register" && (
               <div className="space-y-2">
@@ -141,9 +175,10 @@ export function AuthPage({ type }: AuthPageProps) {
             <Button
               type="submit"
               className="w-full rounded-full transition-all duration-300 hover:translate-y-[-2px] mt-6"
+              disabled={isLoading}
             >
-              {type === "login" ? "Entrar" : "Criar conta"}
-              <ArrowRight className="ml-1 h-4 w-4" />
+              {isLoading ? "Processando..." : (type === "login" ? "Entrar" : "Criar conta")}
+              {!isLoading && <ArrowRight className="ml-1 h-4 w-4" />}
             </Button>
           </form>
 
