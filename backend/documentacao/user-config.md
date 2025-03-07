@@ -60,7 +60,7 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 
 ### Obter Detalhes da Assinatura
 **MÉTODO:** GET  
-**URL:** http://localhost:5000/api/users/subscription  
+**URL:** http://localhost:5000/api/users/subscription
 **AUTHORIZATION:** Bearer Token  
 **RESPOSTA:**
 ```json
@@ -147,7 +147,7 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 
 ### Salvar Chave SIEG
 **MÉTODO:** POST  
-**URL:** http://localhost:5000/api/users/sieg-key  
+**URL:** http://localhost:5000/api/users/sieg-key
 **AUTHORIZATION:** Bearer Token  
 **BODY (json):**
 ```json
