@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { sequelize } from '../config/database';
-import { QueryTypes } from 'sequelize';
+import { QueryTypes, Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 
 // Registro de usuário
@@ -210,10 +210,10 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 // Redefinir senha
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { token, password, confirmPassword } = req.body;
+    const { email, code, password, confirmPassword } = req.body;
     
-    if (!token || !password) {
-      res.status(400).json({ message: 'Token e senha são obrigatórios' });
+    if (!email || !code || !password) {
+      res.status(400).json({ message: 'Email, código e senha são obrigatórios' });
       return;
     }
     
@@ -222,16 +222,19 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
       return;
     }
     
-    // Buscar usuário pelo token
+    // Buscar usuário pelo email e código
     const user = await User.findOne({ 
       where: { 
-        resetToken: token,
-        resetTokenExpiry: { $gt: new Date() } // Token ainda válido
+        email: email,
+        resetToken: code,
+        resetTokenExpiry: {
+          [Op.gt]: new Date() // Token ainda válido (usando Op do Sequelize)
+        }
       } 
     });
     
     if (!user) {
-      res.status(400).json({ message: 'Token inválido ou expirado' });
+      res.status(400).json({ message: 'Código inválido ou expirado' });
       return;
     }
     
@@ -249,10 +252,10 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
       { where: { id: user.id } }
     );
     
-    res.json({ message: 'Password reset successful' });
+    res.json({ message: 'Senha redefinida com sucesso' });
   } catch (error) {
-    console.error('Error in reset password:', error);
-    res.status(500).json({ message: 'Server error during password reset' });
+    console.error('Erro na redefinição de senha:', error);
+    res.status(500).json({ message: 'Erro no servidor durante a redefinição de senha' });
   }
 };
 
