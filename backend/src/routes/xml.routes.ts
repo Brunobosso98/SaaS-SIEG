@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import express, { Router, RequestHandler } from 'express';
 const router: Router = express.Router();
 
 // Import controllers (to be implemented)
@@ -18,11 +18,11 @@ import { authenticate } from '../middleware/auth.middleware';
 router.use(authenticate);
 
 // XML routes
-router.post('/download', downloadXML);
-router.get('/history', getXMLHistory);
-router.get('/:id', getXMLById);
-router.delete('/:id', deleteXML);
-router.get('/view/:id', viewXML);
-router.put('/settings', configureXMLDownloadSettings);
+router.post('/download', downloadXML as unknown as RequestHandler);
+router.get('/history', getXMLHistory as unknown as RequestHandler);
+router.get('/:id', getXMLById as unknown as RequestHandler);
+router.delete('/:id', deleteXML as unknown as RequestHandler);
+router.get('/view/:id', viewXML as unknown as RequestHandler);
+router.put('/settings', configureXMLDownloadSettings as unknown as RequestHandler);
 
 export default router;

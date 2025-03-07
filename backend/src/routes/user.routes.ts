@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import express, { RequestHandler, Router } from 'express';
 const router: Router = express.Router();
 
 // Import controllers (to be implemented)
@@ -18,21 +18,21 @@ import { authenticate } from '../middleware/auth.middleware';
 router.use(authenticate);
 
 // User profile routes
-router.get('/profile', getUserProfile);
-router.put('/profile', updateUserProfile);
+router.get('/profile', getUserProfile as unknown as RequestHandler);
+router.put('/profile', updateUserProfile as unknown as RequestHandler);
 
 // User subscription routes
-router.get('/subscription', getUserSubscription);
+router.get('/subscription', getUserSubscription as unknown as RequestHandler);
 
 // User settings routes
-router.get('/settings', updateUserSettings);
-router.put('/settings', updateUserSettings);
+router.get('/settings', updateUserSettings as unknown as RequestHandler);
+router.put('/settings', updateUserSettings as unknown as RequestHandler);
 
 // SIEG key routes
-router.post('/sieg-key', saveUserSiegKey);
-router.get('/sieg-key', saveUserSiegKey);
+router.post('/sieg-key', saveUserSiegKey as unknown as RequestHandler);
+router.get('/sieg-key', saveUserSiegKey as unknown as RequestHandler);
 
 // User CNPJs routes
-router.get('/cnpjs', getUserCNPJs);
+router.get('/cnpjs', getUserCNPJs as unknown as RequestHandler);
 
 export default router;

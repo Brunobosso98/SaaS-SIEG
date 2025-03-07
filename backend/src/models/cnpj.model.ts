@@ -26,7 +26,7 @@ interface CNPJDownloadConfig {
 }
 
 // Define the attributes for CNPJ creation
-interface CNPJCreationAttributes extends Optional<CNPJAttributes, 'id'> {}
+type CNPJCreationAttributes = Optional<CNPJAttributes, 'id'>
 
 // Define the CNPJ model class
 class CNPJ extends Model<CNPJAttributes, CNPJCreationAttributes> implements CNPJAttributes {

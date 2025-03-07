@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 import bcrypt from 'bcrypt';
+import CNPJ from './cnpj.model';
 
 // Define the User attributes interface
 interface UserAttributes {
@@ -15,6 +16,7 @@ interface UserAttributes {
   plan: 'free' | 'starter' | 'professional' | 'enterprise';
   siegKey: string | null;
   settings: UserSettings;
+  cnpjs?: CNPJ[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -38,7 +40,7 @@ interface UserSettings {
 }
 
 // Define the attributes for User creation
-interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
+type UserCreationAttributes = Optional<UserAttributes, 'id'>;
 
 // Define the User model class
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
@@ -53,11 +55,10 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public plan!: 'free' | 'starter' | 'professional' | 'enterprise';
   public siegKey!: string | null;
   public settings!: UserSettings;
-
+  public cnpjs?: CNPJ[];
   // Timestamps
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-
   // Instance method to check password
   public async checkPassword(password: string): Promise<boolean> {
     return await bcrypt.compare(password, this.password);
@@ -112,13 +113,12 @@ User.init(
       allowNull: true
     },
     settings: {
-      type: DataTypes.JSONB,
-      allowNull: false,
+      type: DataTypes.JSON,
       defaultValue: {
-        documentTypes: ['nfe'],
+        documentTypes: [],
         downloadConfig: {
-          directory: 'NFS/ENTRADA/SAIDA/{YEAR}/{MONTH}/{CNPJ}',
-          retention: 15 // days
+          directory: 'downloads',
+          retention: 7
         },
         notifications: {
           email: true,
@@ -129,12 +129,12 @@ User.init(
     }
   },
   {
+    sequelize,
+    modelName: 'User',
     hooks: {
       beforeCreate: async (user: User) => {
-        if (user.password) {
-          const salt = await bcrypt.genSalt(10);
-          user.password = await bcrypt.hash(user.password, salt);
-        }
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
       },
       beforeUpdate: async (user: User) => {
         if (user.changed('password')) {
@@ -142,11 +142,17 @@ User.init(
           user.password = await bcrypt.hash(user.password, salt);
         }
       }
-    },
-    sequelize,
-    modelName: 'User',
-    timestamps: true
+    }
   }
 );
 
 export default User;
+
+// Define associations
+export const defineAssociations = (CNPJ: typeof import('./cnpj.model').default) => {
+  User.hasMany(CNPJ, {
+    sourceKey: 'id',
+    foreignKey: 'userId',
+    as: 'cnpjs'
+  });
+};

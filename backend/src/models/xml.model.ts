@@ -19,13 +19,13 @@ interface XMLAttributes {
   cnpjId: string;
   userId: string;
   expiryDate: Date | null;
-  metadata: any | null;
+  metadata: Record<string, unknown> | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 // Define the attributes for XML creation
-interface XMLCreationAttributes extends Optional<XMLAttributes, 'id' | 'downloadDate'> {}
+type XMLCreationAttributes = Optional<XMLAttributes, 'id' | 'downloadDate'>;
 
 // Define the XML model class
 class XML extends Model<XMLAttributes, XMLCreationAttributes> implements XMLAttributes {
@@ -43,7 +43,7 @@ class XML extends Model<XMLAttributes, XMLCreationAttributes> implements XMLAttr
   public cnpjId!: string;
   public userId!: string;
   public expiryDate!: Date | null;
-  public metadata!: any | null;
+  public metadata!: Record<string, unknown> | null;
 
   // Timestamps
   public readonly createdAt!: Date;

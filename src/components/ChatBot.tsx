@@ -10,6 +10,7 @@ import {
   Loader2,
   MinusCircle,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { toast } from "@/hooks/use-toast";
 
 interface Message {
@@ -203,7 +204,11 @@ export function ChatBot() {
                           : "bg-muted"
                       }`}
                     >
-                      {message.content}
+                      <ReactMarkdown components={{
+                        p: ({ children }) => <p className="prose prose-sm dark:prose-invert break-words">{children}</p>
+                      }}>
+                        {message.content}
+                      </ReactMarkdown>
                     </div>
                   </div>
                 ))}

@@ -2,14 +2,23 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 // Define custom request interface with user property
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user: {
     id: string;
     email: string;
     plan: string;
     role?: string;
-    [key: string]: any;
+    additionalData?: Record<string, string | number | boolean>;
   };
+}
+
+// Define interface for JWT payload
+interface JWTPayload extends jwt.JwtPayload {
+  id: string;
+  email: string;
+  plan: string;
+  role?: string;
+  additionalData?: Record<string, string | number | boolean>;
 }
 
 // Authentication middleware
@@ -26,7 +35,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     
     // Verify token
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as jwt.JwtPayload;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as JWTPayload;
     
     // Add user from payload to request object
     (req as AuthenticatedRequest).user = decoded;

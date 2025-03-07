@@ -10,7 +10,20 @@ import fs from 'fs';
 interface AuthenticatedRequest extends Request {
   user: {
     id: string;
-    [key: string]: any;
+    email?: string;
+    name?: string;
+    plan?: string;
+    settings?: {
+      documentTypes?: string[];
+      downloadConfig?: {
+        directory?: string;
+        retention?: number;
+      };
+      schedule?: {
+        frequency: string;
+        times?: string[];
+      };
+    };
   };
 }
 
@@ -130,7 +143,7 @@ export const getXMLHistory = async (req: GetXMLHistoryRequest, res: Response): P
     } = req.query;
     
     // Build query filters
-    const filters: any = { userId };
+    const filters: { [key: string]: string | Date | { [Op.between]: Date[] } | { [Op.gte]: Date } | { [Op.lte]: Date } } = { userId };
     if (cnpjId) filters.cnpjId = cnpjId;
     if (documentType) filters.documentType = documentType;
     if (status) filters.status = status;
@@ -321,7 +334,13 @@ export const configureXMLDownloadSettings = async (req: ConfigureXMLDownloadSett
         return;
       }
       
-      updatedSettings.schedule = schedule;
+      // Ensure times array is always defined
+      const updatedSchedule = {
+        frequency: schedule.frequency,
+        times: schedule.times || []
+      };
+      
+      updatedSettings.schedule = updatedSchedule;
     }
     
     // Save updated settings

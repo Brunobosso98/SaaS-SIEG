@@ -6,7 +6,11 @@ import CNPJ from '../models/cnpj.model';
 interface AuthenticatedRequest extends Request {
   user: {
     id: string;
-    [key: string]: any;
+    email?: string;
+    name?: string;
+    plan?: string;
+    siegKey?: string;
+    settings?: UserSettings;
   };
 }
 

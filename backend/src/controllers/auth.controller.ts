@@ -2,37 +2,8 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-
-// Define user interface
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  verified: boolean;
-  verificationToken: string | null;
-  resetToken?: string;
-  resetTokenExpiry?: number;
-  plan: string;
-  createdAt: Date;
-  siegKey: string | null;
-  cnpjs: any[];
-  settings: {
-    documentTypes: string[];
-    downloadConfig: {
-      directory: string;
-      retention: number;
-    };
-    notifications: {
-      email: boolean;
-      downloadComplete: boolean;
-      downloadFailed: boolean;
-    };
-  };
-}
-
-// Mock user database (replace with actual database in production)
-let users: User[] = [];
+import User from '../models/user.model';
+import { v4 as uuidv4 } from 'uuid';
 
 // Register a new user
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -40,7 +11,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const { name, email, password } = req.body;
 
     // Check if user already exists
-    const userExists = users.find(user => user.email === email);
+    const userExists = await User.findOne({ where: { email } });
     if (userExists) {
       res.status(400).json({ message: 'User already exists' });
       return;
@@ -58,22 +29,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     );
 
     // Create new user
-    const newUser: User = {
-      id: Date.now().toString(),
+    const newUser = await User.create({
+      id: uuidv4(),
       name,
       email,
       password: hashedPassword,
       verified: false,
       verificationToken,
-      plan: 'free', // Default plan
-      createdAt: new Date(),
+      plan: 'free',
       siegKey: null,
-      cnpjs: [],
       settings: {
         documentTypes: ['nfe'],
         downloadConfig: {
           directory: 'NFS/ENTRADA/SAIDA/{YEAR}/{MONTH}/{CNPJ}',
-          retention: 15 // days
+          retention: 15
         },
         notifications: {
           email: true,
@@ -81,10 +50,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           downloadFailed: true
         }
       }
-    };
-
-    // Add user to database
-    users.push(newUser);
+    });
 
     // Send verification email
     await sendVerificationEmail(email, verificationToken);
@@ -103,22 +69,33 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
+    
+    console.log(`Attempting login for email: ${email}`);
 
     // Find user
-    const user = users.find(user => user.email === email);
+    const user = await User.findOne({ where: { email } });
     if (!user) {
+      console.log('User not found');
       res.status(400).json({ message: 'Invalid credentials' });
       return;
     }
-
+    
+    console.log(`User found: ${user.email}, verified: ${user.verified}`);
+    
     // Check if user is verified
     if (!user.verified) {
       res.status(401).json({ message: 'Please verify your email before logging in' });
       return;
     }
-
+    
+    // Log password details for debugging (remove in production)
+    console.log(`Stored password hash length: ${user.password.length}`);
+    console.log(`Input password: ${password}`);
+    
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log(`Password match result: ${isMatch}`);
+    
     if (!isMatch) {
       res.status(400).json({ message: 'Invalid credentials' });
       return;
@@ -156,16 +133,17 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as jwt.JwtPayload;
     const { email } = decoded;
 
-    // Find user
-    const userIndex = users.findIndex(user => user.email === email);
-    if (userIndex === -1) {
+    // Find and update user
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
       res.status(400).json({ message: 'Invalid verification token' });
       return;
     }
 
-    // Update user verification status
-    users[userIndex].verified = true;
-    users[userIndex].verificationToken = null;
+    await user.update({
+      verified: true,
+      verificationToken: null
+    });
 
     res.json({ message: 'Email verified successfully. You can now login.' });
   } catch (error) {
@@ -180,9 +158,8 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const { email } = req.body;
 
     // Find user
-    const user = users.find(user => user.email === email);
+    const user = await User.findOne({ where: { email } });
     if (!user) {
-      // For security reasons, don't reveal that the user doesn't exist
       res.json({ message: 'If your email is registered, you will receive password reset instructions' });
       return;
     }
@@ -194,9 +171,11 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       { expiresIn: '1h' }
     );
 
-    // Store reset token with user
-    user.resetToken = resetToken;
-    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    // Update user with reset token
+    await user.update({
+      resetToken,
+      resetTokenExpiry: new Date(Date.now() + 3600000) // 1 hour
+    });
 
     // Send password reset email
     await sendPasswordResetEmail(email, resetToken);
@@ -218,15 +197,17 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     const { id, email } = decoded;
 
     // Find user
-    const userIndex = users.findIndex(user => user.id === id && user.email === email);
-    if (userIndex === -1) {
-      res.status(400).json({ message: 'Invalid or expired reset token' });
-      return;
-    }
+    const user = await User.findOne({
+      where: {
+        id,
+        email,
+        resetToken: token,
+        resetTokenExpiry: { $gt: Date.now() }
+      }
+    });
 
-    // Check if token is expired
-    if (users[userIndex].resetTokenExpiry && users[userIndex].resetTokenExpiry < Date.now()) {
-      res.status(400).json({ message: 'Reset token has expired' });
+    if (!user) {
+      res.status(400).json({ message: 'Invalid or expired reset token' });
       return;
     }
 
@@ -234,10 +215,12 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Update user password
-    users[userIndex].password = hashedPassword;
-    users[userIndex].resetToken = undefined;
-    users[userIndex].resetTokenExpiry = undefined;
+    // Update user
+    await user.update({
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null
+    });
 
     res.json({ message: 'Password reset successful. You can now login with your new password.' });
   } catch (error) {
@@ -248,56 +231,10 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 
 // Helper function to send verification email
 const sendVerificationEmail = async (email: string, token: string): Promise<void> => {
-  // In a real app, you would configure a real email service
-  // For now, we'll just log the verification link
   console.log(`Verification link: http://localhost:3000/verify-email?token=${token}`);
-
-  // Example of how you would send an actual email
-  /*
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
-    }
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Verify Your Email',
-    html: `<p>Please click the link below to verify your email:</p>
-           <a href="http://localhost:3000/verify-email?token=${token}">Verify Email</a>`
-  };
-
-  await transporter.sendMail(mailOptions);
-  */
 };
 
 // Helper function to send password reset email
 const sendPasswordResetEmail = async (email: string, token: string): Promise<void> => {
-  // In a real app, you would configure a real email service
-  // For now, we'll just log the reset link
   console.log(`Password reset link: http://localhost:3000/reset-password?token=${token}`);
-
-  // Example of how you would send an actual email
-  /*
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
-    }
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Reset Your Password',
-    html: `<p>Please click the link below to reset your password:</p>
-           <a href="http://localhost:3000/reset-password?token=${token}">Reset Password</a>`
-  };
-
-  await transporter.sendMail(mailOptions);
-  */
 };

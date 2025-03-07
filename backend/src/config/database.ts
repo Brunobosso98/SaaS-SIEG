@@ -1,4 +1,16 @@
 import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables first
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Log connection parameters for debugging
+console.log('Database connection parameters:');
+console.log(`Host: ${process.env.DB_HOST}`);
+console.log(`User: ${process.env.DB_USER}`);
+console.log(`Database: ${process.env.DB_NAME}`);
+console.log(`Password length: ${process.env.DB_PASSWORD?.length || 0}`);
 
 // Create a new Sequelize instance
 const sequelize = new Sequelize({
@@ -21,6 +33,7 @@ const testConnection = async (): Promise<void> => {
     console.log('Database connection established successfully.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
+    throw error; // Re-throw to allow handling in calling code
   }
 };
 

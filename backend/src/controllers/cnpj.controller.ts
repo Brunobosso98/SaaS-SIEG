@@ -6,7 +6,9 @@ import User from '../models/user.model';
 interface AuthenticatedRequest extends Request {
   user: {
     id: string;
-    [key: string]: any;
+    email?: string;
+    plan?: string;
+    name?: string;
   };
 }
 
@@ -109,13 +111,13 @@ export const addCNPJ = async (req: AuthenticatedRequest, res: Response): Promise
       res.status(400).json({ message: 'This CNPJ is already registered for your account' });
       return;
     }
-    
     // Create new CNPJ
     const newCNPJ = await CNPJ.create({
       cnpj,
       razaoSocial,
       nomeFantasia,
       userId,
+      active: true,
       downloadConfig: downloadConfig || undefined
     });
     

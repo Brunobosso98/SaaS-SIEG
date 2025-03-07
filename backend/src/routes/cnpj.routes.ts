@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response, RequestHandler } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
 const router: Router = express.Router();
 
 // Import controllers (to be implemented)
@@ -17,10 +18,10 @@ import { authenticate } from '../middleware/auth.middleware';
 router.use(authenticate);
 
 // CNPJ routes
-router.get('/', getAllCNPJs);
-router.get('/:id', getCNPJById);
-router.post('/', addCNPJ);
-router.put('/:id', updateCNPJ);
-router.delete('/:id', deleteCNPJ);
+router.get('/', getAllCNPJs as unknown as RequestHandler);
+router.get('/:id', getCNPJById as unknown as RequestHandler);
+router.post('/', addCNPJ as unknown as RequestHandler);
+router.put('/:id', updateCNPJ as unknown as RequestHandler);
+router.delete('/:id', deleteCNPJ as unknown as RequestHandler);
 
 export default router;
