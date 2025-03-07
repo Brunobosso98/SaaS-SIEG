@@ -28,7 +28,7 @@ export function EmailVerificationPage() {
     setErrorMessage(null);
     
     try {
-      await authService.verifyEmail(verificationCode);
+      await authService.verifyEmail(verificationCode, email);
       setIsVerified(true);
       toast({
         title: "Email verificado com sucesso",

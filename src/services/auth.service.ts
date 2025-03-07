@@ -54,8 +54,8 @@ const authService = {
     return null;
   },
 
-  async verifyEmail(code: string): Promise<void> {
-    await axios.post(`${API_URL}/auth/verify-email`, { code });
+  async verifyEmail(code: string, email?: string): Promise<void> {
+    await axios.post(`${API_URL}/auth/verify-email`, { code, email });
   },
 
   async resendVerificationCode(email: string): Promise<void> {

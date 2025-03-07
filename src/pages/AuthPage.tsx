@@ -15,8 +15,10 @@ interface AuthPageProps {
 
 export function AuthPage({ type }: AuthPageProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -36,14 +38,22 @@ export function AuthPage({ type }: AuthPageProps) {
           title: "Login realizado com sucesso",
           description: "Bem-vindo de volta!"
         });
+        navigate("/dashboard");
       } else {
+        // Check if passwords match for registration
+        if (password !== confirmPassword) {
+          setErrorMessage("As senhas não coincidem");
+          setIsLoading(false);
+          return;
+        }
+        
         await register(name, email, password);
         toast({
           title: "Conta criada com sucesso",
           description: "Verifique seu email para ativar sua conta."
         });
+        navigate("/email-verification", { state: { email } });
       }
-      navigate("/dashboard");
     } catch (error: any) {
       setErrorMessage(error.response?.data?.message || 
         (type === "login" ? "Falha ao fazer login. Verifique suas credenciais." : "Falha ao criar conta. Tente novamente."));
@@ -54,6 +64,10 @@ export function AuthPage({ type }: AuthPageProps) {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -163,6 +177,39 @@ export function AuthPage({ type }: AuthPageProps) {
                 </button>
               </div>
             </div>
+
+            {type === "register" && (
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium">
+                  Confirmar Senha
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    onClick={toggleConfirmPasswordVisibility}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {type === "login" && (
               <div className="text-right">
