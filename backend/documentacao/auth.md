@@ -67,7 +67,7 @@ RESPOSTA:
 
 ### Redefinir Senha
 MÉTODO: POST 
-URL: http://localhost:5000/api/auth/reset-password 
+URL: http://localhost:5000/api/auth/reset-password
 BODY (json):
 {
   "email": "usuario@exemplo.com",
