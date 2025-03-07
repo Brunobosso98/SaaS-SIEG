@@ -8,7 +8,8 @@ import {
   getUserSubscription,
   updateUserSettings,
   saveUserSiegKey,
-  getUserCNPJs
+  getUserCNPJs,
+  updateUserPlan
 } from '../controllers/user.controller';
 
 // Import middleware
@@ -23,6 +24,7 @@ router.put('/profile', updateUserProfile as unknown as RequestHandler);
 
 // User subscription routes
 router.get('/subscription', getUserSubscription as unknown as RequestHandler);
+router.put('/subscription', updateUserPlan as unknown as RequestHandler); // Add this line
 
 // User settings routes
 router.get('/settings', updateUserSettings as unknown as RequestHandler);

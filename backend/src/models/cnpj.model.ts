@@ -88,6 +88,7 @@ CNPJ.init(
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
+      field: 'user_id', // Explicitly define the database column name
       references: {
         model: 'users',
         key: 'id'
@@ -97,18 +98,19 @@ CNPJ.init(
   {
     sequelize,
     modelName: 'CNPJ',
+    tableName: 'cnpjs',
     timestamps: true,
     indexes: [
       {
         unique: true,
-        fields: ['cnpj', 'userId']
+        fields: ['cnpj', 'user_id'] // Use snake_case here to match the database column
       }
     ]
   }
 );
 
-// Associations
-CNPJ.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-User.hasMany(CNPJ, { foreignKey: 'userId', as: 'cnpjs' });
+// Update the associations to use the correct field name
+CNPJ.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(CNPJ, { foreignKey: 'user_id', as: 'cnpjs' });
 
 export default CNPJ;
