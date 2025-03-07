@@ -50,7 +50,7 @@ async function initDatabase() {
     
     // Create test user with direct password hashing
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('brunao', salt);
+    const hashedPassword = await bcrypt.hash('brunaogostoso', salt);
     
     const userId = uuidv4();
     
@@ -72,9 +72,9 @@ async function initDatabase() {
       replacements: {
         id: userId,
         name: 'Test User',
-        email: 'brugala2001@gmail.com',
+        email: 'brunao@example.com',
         password: hashedPassword,
-        verified: false, // Changed to false to test verification
+        verified: true,
         plan: 'professional',
         settings: JSON.stringify({
           documentTypes: ['nfe', 'nfce'],
@@ -103,8 +103,8 @@ async function initDatabase() {
     });
     
     console.log('Test user created successfully:');
-    console.log(`Email: brugala2001@gmail.com`);
-    console.log(`Password: brunao`);
+    console.log(`Email: brunao@example.com`);
+    console.log(`Password: brunaogostoso`);
     
     console.log('Database initialization completed.');
   } catch (error) {
