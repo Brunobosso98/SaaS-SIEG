@@ -26,48 +26,76 @@ async function initDatabase() {
     // Test database connection
     await testConnection();
     
+    // Log models being synced
+    console.log('Models to sync:');
+    console.log('- User model:', User.name);
+    console.log('- CNPJ model:', CNPJ.name);
+    
     // Sync all models with database
     console.log('Syncing database models...');
-    await sequelize.sync({ force: true }); // This will drop tables if they exist
-    console.log('Database synchronized successfully.');
+    await sequelize.sync({ force: true });
+    
+    // Log all tables after sync
+    const tables = await sequelize.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
+    `, { type: QueryTypes.SELECT });
+    
+    console.log('\nCreated tables:');
+    tables.forEach((table: any) => {
+      console.log(`- ${table.table_name}`);
+    });
+    console.log('\nDatabase synchronized successfully.');
     
     // Create test user with direct password hashing
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('brunaogostoso', salt);
     
+    const userId = uuidv4();
+    
     // Get the actual table name from the model
     const tableName = User.getTableName();
-    console.log(`Using table name: ${tableName}`);
     
     // Use raw query to bypass model hooks with correct table name
     await sequelize.query(`
       INSERT INTO "${tableName}" (
         "id", "name", "email", "password", "verified", 
-        "plan", "settings", "created_at", "updated_at"
+        "plan", "settings", "sieg_key", "verification_token",
+        "reset_token", "reset_token_expiry", "created_at", "updated_at"
       ) VALUES (
         :id, :name, :email, :password, :verified,
-        :plan, :settings, :created_at, :updated_at
+        :plan, :settings, :siegKey, :verificationToken,
+        :resetToken, :resetTokenExpiry, :created_at, :updated_at
       )
     `, {
       replacements: {
-        id: uuidv4(),
+        id: userId,
         name: 'Test User',
         email: 'brunao@example.com',
         password: hashedPassword,
         verified: true,
-        plan: 'free',
+        plan: 'professional',
         settings: JSON.stringify({
-          documentTypes: ['nfe'],
+          documentTypes: ['nfe', 'nfce'],
           downloadConfig: {
             directory: 'downloads',
-            retention: 7
+            retention: 30
           },
           notifications: {
             email: true,
             downloadComplete: true,
             downloadFailed: true
+          },
+          schedule: {
+            frequency: 'daily',
+            times: ['08:00', '14:00']
           }
         }),
+        siegKey: 'test-sieg-key-123456',
+        verificationToken: null,
+        resetToken: null,
+        resetTokenExpiry: null,
         created_at: new Date(),
         updated_at: new Date()
       },
@@ -82,7 +110,6 @@ async function initDatabase() {
   } catch (error) {
     console.error('Error initializing database:', error);
   } finally {
-    // Close the database connection
     await sequelize.close();
   }
 }

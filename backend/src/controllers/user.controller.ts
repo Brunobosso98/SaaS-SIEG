@@ -263,3 +263,39 @@ function maskSiegKey(key: string): string {
   
   return `${firstFour}${masked}${lastFour}`;
 }
+// Update user plan
+export const updateUserPlan = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const { plan } = req.body;
+    
+    // Validate plan
+    const validPlans = ['free', 'starter', 'professional', 'enterprise'];
+    if (!plan || !validPlans.includes(plan)) {
+      res.status(400).json({ message: 'Invalid plan. Must be one of: free, starter, professional, enterprise' });
+      return;
+    }
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    // Update plan
+    user.plan = plan as 'free' | 'starter' | 'professional' | 'enterprise';
+    
+    // Save changes
+    await user.save();
+    
+    res.json({
+      message: 'Plan updated successfully',
+      plan: user.plan
+    });
+  } catch (error) {
+    console.error('Error updating user plan:', error);
+    res.status(500).json({ message: 'Server error while updating plan' });
+  }
+};
