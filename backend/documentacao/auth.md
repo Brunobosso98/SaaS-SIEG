@@ -28,7 +28,7 @@ BODY (json):
   "password": "senhaSegura123"
 }
 
-RESPOSTA:
+RESPOSTA (email verificado):
 {
   "message": "Login successful",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -38,6 +38,13 @@ RESPOSTA:
     "email": "usuario@exemplo.com",
     "plan": "free"
   }
+}
+
+RESPOSTA (email não verificado):
+{
+  "message": "Email not verified. A new verification code has been sent to your email.",
+  "verified": false,
+  "userId": "uuid-do-usuario"
 }
 
 ### Informações do Usuário
@@ -63,7 +70,8 @@ MÉTODO: POST
 URL: http://localhost:5000/api/auth/reset-password 
 BODY (json):
 {
-  "token": "token-recebido-por-email",
+  "email": "usuario@exemplo.com",
+  "code": "123456",
   "password": "novaSenha123",
   "confirmPassword": "novaSenha123"
 }
@@ -78,7 +86,8 @@ MÉTODO: POST
 URL: http://localhost:5000/api/auth/verify-email 
 BODY (json):
 {
-  "token": "token-de-verificacao-recebido-por-email"
+  "email": "usuario@exemplo.com",
+  "code": "123456"
 }
 
 RESPOSTA:
@@ -105,3 +114,4 @@ RESPOSTA:
 - Todos os endpoints retornam códigos HTTP apropriados (200 para sucesso, 400 para erros de validação, 401 para erros de autenticação, etc.)
 - O token JWT recebido após o login deve ser incluído no cabeçalho de autorização para endpoints protegidos: Authorization: Bearer seu-token-jwt
 - Os tokens para redefinição de senha e verificação de email são válidos por tempo limitado
+- **Importante**: O usuário deve verificar seu email antes de poder acessar endpoints protegidos. Tentativas de acessar endpoints protegidos com um email não verificado resultarão em um erro 403.
