@@ -3,23 +3,30 @@ import { useState } from "react";
 import { ArrowRight, Download, Mail, ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
+import authService, { ApiError } from "@/services/auth.service";
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real app, we would send a password reset email here
-    // For now, we'll just show a success message
-    setIsSubmitted(true);
-    toast.success("Instruções enviadas para seu email!");
+    try {
+      setIsSubmitted(true);
+      await authService.requestPasswordReset(email);
+      toast.success("Instruções enviadas para seu email!");
+      navigate("/reset-password", { state: { email } });
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      toast.error(apiError.response?.data?.message || "Falha ao enviar instruções. Tente novamente.");
+      setIsSubmitted(false);
+    }
   };
-
   return (
     <div className="min-h-screen flex flex-col">
       <header className="w-full py-4 px-8 flex justify-between items-center border-b border-border/30">

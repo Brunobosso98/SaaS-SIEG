@@ -95,9 +95,13 @@ const authService = {
   async requestPasswordReset(email: string): Promise<void> {
     await axios.post(`${API_URL}/auth/forgot-password`, { email });
   },
-
-  async resetPassword(token: string, password: string): Promise<void> {
-    await axios.post(`${API_URL}/auth/reset-password`, { token, password });
+  async resetPassword(code: string, password: string, email: string): Promise<void> {
+    await axios.post(`${API_URL}/auth/reset-password`, { 
+      email,
+      code,
+      password,
+      confirmPassword: password
+    });
   }
 };
 
