@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService, { AuthResponse } from '../services/auth.service';
+import authService, { AuthResponse, ApiError } from '../services/auth.service';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -50,10 +50,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setError(null);
       setLoading(true);
+      console.log('Attempting login for email:', email);
       const response = await authService.login({ email, password });
+      
+      console.log('Login response:', {
+        verified: response.user.verified,
+        userId: response.user.id,
+        plan: response.user.plan
+      });
+      
+      // If we got here, the user is verified
+      console.log('User is verified, proceeding with login');
       setUser(response.user);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Falha ao fazer login. Verifique suas credenciais.');
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      console.error('Login error:', apiError);
+      
+      // Check if this is a 403 error for unverified email
+      if (apiError.response?.status === 403 && 
+          apiError.response?.data?.message?.includes('Email not verified')) {
+        console.log('User email is not verified, redirecting to verification page');
+        setError('Email não verificado');
+        
+        // Create a custom error with the email and verification info
+        throw { 
+          message: 'Email not verified', 
+          email: email,
+          userId: apiError.response.data?.userId,
+          verified: false
+        };
+      }
+      
+      setError(apiError.response?.data?.message || 'Falha ao fazer login. Verifique suas credenciais.');
       throw err;
     } finally {
       setLoading(false);
@@ -66,8 +94,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       const response = await authService.register({ name, email, password });
       setUser(response.user);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Falha ao registrar. Tente novamente.');
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || 'Falha ao registrar. Tente novamente.');
       throw err;
     } finally {
       setLoading(false);

@@ -37,6 +37,19 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Get the actual table name from the model
     const tableName = User.getTableName();
     
+    // Define a type for the user data returned from the query
+    interface UserData {
+      id: string;
+      name: string;
+      email: string;
+      password: string;
+      verified: boolean;
+      plan: string;
+      settings: string;
+      created_at: Date;
+      updated_at: Date;
+    }
+    
     // Use raw query to bypass model hooks with correct table name
     const [results] = await sequelize.query(`
       INSERT INTO "${tableName}" (
@@ -70,16 +83,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         updated_at: new Date()
       },
       type: QueryTypes.INSERT
-    }) as unknown as [any[], number];
+    }) as unknown as [UserData[], number];
     
     // The results is an array of objects, get the first row
-    const userData = results[0] as any;
+    const userData = results[0];
     
     // Convert the raw query result to a User instance
     const createdUser = await User.findByPk(userData.id);
     
-    // Enviar email de verificação
-    await sendVerificationEmail(createdUser);
+    // Check if user exists before sending verification email
+    if (createdUser) {
+      // Enviar email de verificação
+      await sendVerificationEmail(createdUser);
+    } else {
+      console.error('User not found after creation, verification email not sent');
+    }
     
     res.status(201).json({
       message: 'User registered successfully. Please verify your email.',

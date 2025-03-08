@@ -13,6 +13,12 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+// Define JWT payload interface
+interface JWTPayload {
+  id: string;
+  [key: string]: unknown;
+}
+
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // Get token from header
@@ -27,7 +33,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const token = authHeader.split(' ')[1];
     
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JWTPayload;
     
     // Find user by id
     const user = await User.findByPk(decoded.id);

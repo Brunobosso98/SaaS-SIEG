@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { ApiError } from "@/services/auth.service";
 
 interface AuthPageProps {
   type: "login" | "register";
@@ -54,8 +55,20 @@ export function AuthPage({ type }: AuthPageProps) {
         });
         navigate("/email-verification", { state: { email } });
       }
-    } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || 
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      
+      // Check if this is an email verification error
+      if (apiError.message === 'Email not verified') {
+        toast({
+          title: "Verificação de email necessária",
+          description: "Um novo código de verificação foi enviado para seu email."
+        });
+        navigate("/verify-email", { state: { email } });
+        return;
+      }
+      
+      setErrorMessage(apiError.response?.data?.message || 
         (type === "login" ? "Falha ao fazer login. Verifique suas credenciais." : "Falha ao criar conta. Tente novamente."));
     } finally {
       setIsLoading(false);

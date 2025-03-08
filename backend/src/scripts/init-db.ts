@@ -13,12 +13,11 @@ import CNPJ from '../models/cnpj.model';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 
-// Define associations
-// User.hasMany(CNPJ, {
-//   sourceKey: 'id',
-//   foreignKey: 'userId',
-//   as: 'cnpjs'
-// });
+// Define interface for database table information
+interface TableInfo {
+  table_name: string;
+  [key: string]: unknown;
+}
 
 // Initialize database and create test user
 async function initDatabase() {
@@ -40,12 +39,13 @@ async function initDatabase() {
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public'
-    `, { type: QueryTypes.SELECT });
+    `, { type: QueryTypes.SELECT }) as TableInfo[];
     
     console.log('\nCreated tables:');
-    tables.forEach((table: any) => {
+    tables.forEach((table: TableInfo) => {
       console.log(`- ${table.table_name}`);
     });
+    
     console.log('\nDatabase synchronized successfully.');
     
     // Create test user with direct password hashing

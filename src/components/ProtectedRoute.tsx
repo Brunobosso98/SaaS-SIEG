@@ -9,6 +9,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
+  // Adicionar logs para depuração
+  console.log('ProtectedRoute - Auth State:', { 
+    isAuthenticated, 
+    loading, 
+    user: user ? {
+      id: user.id,
+      email: user.email,
+      verified: user.verified
+    } : null 
+  });
+
   // Show loading state while checking authentication
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
@@ -20,10 +31,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Redirect to email verification if user is not verified
-  if (user && !user.verified) {
+  // Modificado para tratar 'undefined' como verificado (true)
+  if (user && user.verified === false) {
+    console.log('Redirecionando para verificação de email porque user.verified =', user.verified);
     return <Navigate to="/verify-email" state={{ email: user.email }} replace />;
   }
 
   // Render children if authenticated and verified
+  console.log('Renderizando rota protegida - usuário verificado');
   return <>{children}</>;
 };
