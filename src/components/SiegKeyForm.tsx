@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Key, Save, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { saveSiegKey, getSiegKey } from "@/services/user.service";
 
 export function SiegKeyForm() {
   const [key, setKey] = useState("");
@@ -12,7 +13,25 @@ export function SiegKeyForm() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSaveKey = () => {
+  useEffect(() => {
+    // Try to get the saved SIEG key when component mounts
+    const fetchSiegKey = async () => {
+      try {
+        const response = await getSiegKey();
+        if (response.siegKey) {
+          setKey(response.siegKey);
+          setIsSaved(true);
+        }
+      } catch (error) {
+        // If there's no key saved yet, just continue with empty state
+        console.error("Error fetching SIEG key:", error);
+      }
+    };
+
+    fetchSiegKey();
+  }, []);
+
+  const handleSaveKey = async () => {
     if (!key.trim()) {
       toast({
         title: "Chave não informada",
@@ -24,15 +43,22 @@ export function SiegKeyForm() {
 
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await saveSiegKey(key.trim());
       setIsSaved(true);
       toast({
         title: "Chave salva com sucesso",
         description: "Sua chave de administrador do SIEG foi salva com sucesso.",
       });
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar a chave",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao salvar a chave do SIEG.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

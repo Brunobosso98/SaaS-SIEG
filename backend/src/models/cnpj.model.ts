@@ -6,23 +6,10 @@ import User from './user.model';
 interface CNPJAttributes {
   id: string;
   cnpj: string;
-  razaoSocial: string;
-  nomeFantasia: string | null;
   active: boolean;
-  downloadConfig: CNPJDownloadConfig;
   userId: string;
   createdAt?: Date;
   updatedAt?: Date;
-}
-
-// Define the CNPJDownloadConfig interface
-interface CNPJDownloadConfig {
-  documentTypes: string[];
-  directory: string | null;
-  schedule: {
-    frequency: string;
-    times: string[];
-  };
 }
 
 // Define the attributes for CNPJ creation
@@ -32,10 +19,7 @@ type CNPJCreationAttributes = Optional<CNPJAttributes, 'id'>
 class CNPJ extends Model<CNPJAttributes, CNPJCreationAttributes> implements CNPJAttributes {
   public id!: string;
   public cnpj!: string;
-  public razaoSocial!: string;
-  public nomeFantasia!: string | null;
   public active!: boolean;
-  public downloadConfig!: CNPJDownloadConfig;
   public userId!: string;
 
   // Timestamps
@@ -61,29 +45,9 @@ CNPJ.init(
         isNumeric: true
       }
     },
-    razaoSocial: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    nomeFantasia: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
     active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
-    },
-    downloadConfig: {
-      type: DataTypes.JSONB,
-      allowNull: false,
-      defaultValue: {
-        documentTypes: ['nfe'],
-        directory: null, // Uses user's default if null
-        schedule: {
-          frequency: 'daily',
-          times: ['08:00']
-        }
-      }
     },
     userId: {
       type: DataTypes.UUID,
@@ -100,17 +64,8 @@ CNPJ.init(
     modelName: 'CNPJ',
     tableName: 'cnpjs',
     timestamps: true,
-    indexes: [
-      {
-        unique: true,
-        fields: ['cnpj', 'user_id'] // Use snake_case here to match the database column
-      }
-    ]
+    underscored: true
   }
 );
-
-// Update the associations to use the correct field name
-CNPJ.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-User.hasMany(CNPJ, { foreignKey: 'user_id', as: 'cnpjs' });
 
 export default CNPJ;

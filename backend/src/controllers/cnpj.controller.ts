@@ -12,15 +12,6 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-interface CNPJConfig {
-  directory?: string;
-  retention?: number;
-  schedule?: {
-    frequency: string;
-    time: string;
-  };
-}
-
 // Get all CNPJs for the authenticated user
 export const getAllCNPJs = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -29,7 +20,7 @@ export const getAllCNPJs = async (req: AuthenticatedRequest, res: Response): Pro
     // Find all CNPJs associated with the user
     const cnpjs = await CNPJ.findAll({
       where: { userId },
-      attributes: ['id', 'cnpj', 'razaoSocial', 'nomeFantasia', 'active', 'downloadConfig', 'createdAt', 'updatedAt']
+      attributes: ['id', 'cnpj', 'active', 'createdAt', 'updatedAt']
     });
     
     res.json(cnpjs);
@@ -48,7 +39,7 @@ export const getCNPJById = async (req: AuthenticatedRequest, res: Response): Pro
     // Find CNPJ by ID and ensure it belongs to the authenticated user
     const cnpj = await CNPJ.findOne({
       where: { id: cnpjId, userId },
-      attributes: ['id', 'cnpj', 'razaoSocial', 'nomeFantasia', 'active', 'downloadConfig', 'createdAt', 'updatedAt']
+      attributes: ['id', 'cnpj', 'active', 'createdAt', 'updatedAt']
     });
     
     if (!cnpj) {
@@ -67,7 +58,7 @@ export const getCNPJById = async (req: AuthenticatedRequest, res: Response): Pro
 export const addCNPJ = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
-    const { cnpj, razaoSocial, nomeFantasia, downloadConfig } = req.body;
+    const { cnpj } = req.body;
     
     // Validate CNPJ format
     if (!cnpj || cnpj.length !== 14 || !/^\d+$/.test(cnpj)) {
@@ -114,11 +105,8 @@ export const addCNPJ = async (req: AuthenticatedRequest, res: Response): Promise
     // Create new CNPJ
     const newCNPJ = await CNPJ.create({
       cnpj,
-      razaoSocial,
-      nomeFantasia,
       userId,
-      active: true,
-      downloadConfig: downloadConfig || undefined
+      active: true
     });
     
     res.status(201).json({
@@ -136,7 +124,7 @@ export const updateCNPJ = async (req: AuthenticatedRequest, res: Response): Prom
   try {
     const userId = req.user.id;
     const cnpjId = req.params.id;
-    const { razaoSocial, nomeFantasia, active, downloadConfig } = req.body;
+    const { active } = req.body;
     
     // Find CNPJ by ID and ensure it belongs to the authenticated user
     const cnpj = await CNPJ.findOne({
@@ -149,10 +137,7 @@ export const updateCNPJ = async (req: AuthenticatedRequest, res: Response): Prom
     }
     
     // Update CNPJ fields
-    if (razaoSocial) cnpj.razaoSocial = razaoSocial;
-    if (nomeFantasia) cnpj.nomeFantasia = nomeFantasia;
     if (typeof active === 'boolean') cnpj.active = active;
-    if (downloadConfig) cnpj.downloadConfig = downloadConfig;
     
     // Save changes
     await cnpj.save();

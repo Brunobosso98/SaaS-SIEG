@@ -9,19 +9,8 @@ AUTHORIZATION: Bearer Token
 BODY (json):
 
 {
-  "cnpj": "12345678000199",
-  "razaoSocial": "Empresa Teste",
-  "nomeFantasia": "Teste LTDA",
-  "downloadConfig": {
-    "documentTypes": ["nfe", "nfce"],
-    "directory": "downloads",
-    "schedule": {
-      "frequency": "daily",
-      "times": ["08:00"]
-    }
-  }
+  "cnpj": "12345678000199"
 }
-
 
 RESPOSTA:
 
@@ -30,23 +19,12 @@ RESPOSTA:
   "cnpj": {
     "id": "uuid-do-cnpj",
     "cnpj": "12345678000199",
-    "razaoSocial": "Empresa Teste",
-    "nomeFantasia": "Teste LTDA",
     "userId": "uuid-do-usuario",
     "active": true,
-    "downloadConfig": {
-      "documentTypes": ["nfe", "nfce"],
-      "directory": "downloads",
-      "schedule": {
-        "frequency": "daily",
-        "times": ["08:00"]
-      }
-    },
     "createdAt": "2023-01-01T00:00:00.000Z",
     "updatedAt": "2023-01-01T00:00:00.000Z"
   }
 }
-
 
 ### Listar CNPJs
 MÉTODO: GET 
@@ -59,34 +37,14 @@ RESPOSTA:
     {
       "id": "uuid-do-cnpj-1",
       "cnpj": "12345678000199",
-      "razaoSocial": "Empresa Teste",
-      "nomeFantasia": "Teste LTDA",
       "active": true,
-      "downloadConfig": {
-        "documentTypes": ["nfe", "nfce"],
-        "directory": "downloads",
-        "schedule": {
-          "frequency": "daily",
-          "times": ["08:00"]
-        }
-      },
       "createdAt": "2023-01-01T00:00:00.000Z",
       "updatedAt": "2023-01-01T00:00:00.000Z"
     },
     {
       "id": "uuid-do-cnpj-2",
       "cnpj": "98765432000199",
-      "razaoSocial": "Segunda Empresa",
-      "nomeFantasia": "Empresa 2 LTDA",
       "active": true,
-      "downloadConfig": {
-        "documentTypes": ["nfe", "cte"],
-        "directory": "downloads/empresa2",
-        "schedule": {
-          "frequency": "weekly",
-          "times": ["10:00"]
-        }
-      },
       "createdAt": "2023-01-02T00:00:00.000Z",
       "updatedAt": "2023-01-02T00:00:00.000Z"
     }
@@ -102,17 +60,7 @@ RESPOSTA:
 {
   "id": "uuid-do-cnpj",
   "cnpj": "12345678000199",
-  "razaoSocial": "Empresa Teste",
-  "nomeFantasia": "Teste LTDA",
   "active": true,
-  "downloadConfig": {
-    "documentTypes": ["nfe", "nfce"],
-    "directory": "downloads",
-    "schedule": {
-      "frequency": "daily",
-      "times": ["08:00"]
-    }
-  },
   "createdAt": "2023-01-01T00:00:00.000Z",
   "updatedAt": "2023-01-01T00:00:00.000Z"
 }
@@ -124,17 +72,7 @@ AUTHORIZATION: Bearer Token
 BODY (json):
 
 {
-  "razaoSocial": "Empresa Atualizada",
-  "nomeFantasia": "Nova Fantasia LTDA",
-  "active": true,
-  "downloadConfig": {
-    "documentTypes": ["nfe", "nfce", "cte"],
-    "directory": "downloads/nova-pasta",
-    "schedule": {
-      "frequency": "daily",
-      "times": ["08:00", "18:00"]
-    }
-  }
+  "active": true
 }
 
 RESPOSTA:
@@ -144,17 +82,7 @@ RESPOSTA:
   "cnpj": {
     "id": "uuid-do-cnpj",
     "cnpj": "12345678000199",
-    "razaoSocial": "Empresa Atualizada",
-    "nomeFantasia": "Nova Fantasia LTDA",
     "active": true,
-    "downloadConfig": {
-      "documentTypes": ["nfe", "nfce", "cte"],
-      "directory": "downloads/nova-pasta",
-      "schedule": {
-        "frequency": "daily",
-        "times": ["08:00", "18:00"]
-      }
-    },
     "updatedAt": "2023-01-03T00:00:00.000Z"
   }
 }
@@ -173,5 +101,5 @@ RESPOSTA:
 - Todos os endpoints requerem autenticação via token JWT
 - O parâmetro :id nas URLs deve ser substituído pelo UUID do CNPJ
 - O número de CNPJs que um usuário pode cadastrar depende do seu plano de assinatura
-- Os tipos de documentos suportados incluem: "nfe", "nfce", "cte", entre outros
-- As frequências de download suportadas são: "daily", "weekly", "monthly"
+- As configurações de download (tipos de documentos, diretório, agendamento) são definidas no nível do usuário através das configurações do perfil
+- O formato do CNPJ deve conter exatamente 14 dígitos numéricos
