@@ -33,7 +33,7 @@ interface UserSettings {
     downloadComplete: boolean;
     downloadFailed: boolean;
   };
-  schedule?: {
+  schedule: {
     frequency: string;
     times: string[];
   };
@@ -124,6 +124,10 @@ User.init(
           email: true,
           downloadComplete: true,
           downloadFailed: true
+        },
+        schedule: {
+          frequency: 'daily',
+          times: ['08:00']
         }
       }
     }

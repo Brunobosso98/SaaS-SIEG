@@ -25,6 +25,10 @@ interface UserSettings {
     downloadComplete: boolean;
     downloadFailed: boolean;
   };
+  schedule: {
+    frequency: string;
+    times: string[];
+  };
 }
 
 interface PlanDetails {
@@ -201,7 +205,6 @@ export const saveUserSiegKey = async (req: AuthenticatedRequest, res: Response):
     res.status(500).json({ message: 'Server error while managing SIEG key' });
   }
 };
-
 // Get user CNPJs
 export const getUserCNPJs = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -210,7 +213,7 @@ export const getUserCNPJs = async (req: AuthenticatedRequest, res: Response): Pr
     // Find all CNPJs associated with the user
     const cnpjs = await CNPJ.findAll({
       where: { userId, active: true },
-      attributes: ['id', 'cnpj', 'razaoSocial', 'nomeFantasia', 'downloadConfig']
+      attributes: ['id', 'cnpj', 'active']
     });
     
     res.json(cnpjs);

@@ -281,7 +281,6 @@ export const viewXML = async (req: AuthenticatedRequest, res: Response): Promise
       </ide>
       <emit>
         <CNPJ>${xml.cnpj ? xml.cnpj.cnpj : '00000000000000'}</CNPJ>
-        <xNome>${xml.cnpj ? xml.cnpj.razaoSocial : 'Empresa Exemplo'}</xNome>
       </emit>
     </infNFe>
   </NFe>

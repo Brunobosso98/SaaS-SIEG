@@ -25,6 +25,19 @@ async function initDatabase() {
     // Test database connection
     await testConnection();
     
+    // Initialize model associations
+    User.hasMany(CNPJ, {
+      sourceKey: 'id',
+      foreignKey: 'userId',
+      as: 'cnpjs'
+    });
+    
+    CNPJ.belongsTo(User, {
+      targetKey: 'id',
+      foreignKey: 'userId',
+      as: 'user'
+    });
+    
     // Log models being synced
     console.log('Models to sync:');
     console.log('- User model:', User.name);
