@@ -2,7 +2,14 @@ import transporter from '../config/email.config';
 import crypto from 'crypto';
 import User from '../models/user.model';
 
-export const sendVerificationEmail = async (user: any): Promise<void> => {
+// Define interface for user data
+interface UserData {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+export const sendVerificationEmail = async (user: UserData): Promise<void> => {
   try {
     // Generate a 6-digit verification code instead of a token
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();

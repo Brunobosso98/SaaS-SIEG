@@ -10,6 +10,7 @@ import { LandingPage } from "@/pages/LandingPage";
 import { PlansPage } from "@/pages/PlansPage";
 import { AuthPage } from "@/pages/AuthPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { EmailVerificationPage } from "@/pages/EmailVerificationPage";
 import { Dashboard } from "@/pages/Dashboard";
 import { ReportsPage } from "@/pages/ReportsPage";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/login" element={<AuthPage type="login" />} />
             <Route path="/register" element={<AuthPage type="register" />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/verify-email" element={<EmailVerificationPage />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />

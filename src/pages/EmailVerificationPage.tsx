@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import authService from "@/services/auth.service";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { ApiError } from "@/services/auth.service";
 
 export function EmailVerificationPage() {
   const [verificationCode, setVerificationCode] = useState("");
@@ -39,8 +40,9 @@ export function EmailVerificationPage() {
       setTimeout(() => {
         navigate("/dashboard");
       }, 2000);
-    } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || "Código de verificação inválido. Tente novamente.");
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      setErrorMessage(apiError.response?.data?.message || "Código de verificação inválido. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -117,10 +119,11 @@ export function EmailVerificationPage() {
                           title: "Código reenviado",
                           description: "Um novo código foi enviado para seu email."
                         });
-                      } catch (error: any) {
+                      } catch (error: unknown) {
+                        const apiError = error as ApiError;
                         toast({
                           title: "Erro ao reenviar código",
-                          description: error.response?.data?.message || "Não foi possível reenviar o código. Tente novamente.",
+                          description: apiError.response?.data?.message || "Não foi possível reenviar o código. Tente novamente.",
                           variant: "destructive"
                         });
                       } finally {

@@ -13,6 +13,23 @@ export interface LoginData {
   password: string;
 }
 
+export interface UserSettings {
+  documentTypes: string[];
+  downloadConfig: {
+    directory: string;
+    retention: number;
+  };
+  notifications: {
+    email: boolean;
+    downloadComplete: boolean;
+    downloadFailed: boolean;
+  };
+  schedule?: {
+    frequency: string;
+    times: string[];
+  };
+}
+
 export interface AuthResponse {
   token: string;
   user: {
@@ -21,8 +38,21 @@ export interface AuthResponse {
     email: string;
     verified: boolean;
     plan: string;
-    settings: any;
+    settings: UserSettings;
   };
+}
+
+// Update your ApiError interface to include the response structure
+export interface ApiError extends Error {
+  response?: {
+    data?: {
+      message?: string;
+      verified?: boolean;
+      userId?: string;
+    };
+    status?: number;
+  };
+  code?: string;
 }
 
 const authService = {
@@ -65,9 +95,13 @@ const authService = {
   async requestPasswordReset(email: string): Promise<void> {
     await axios.post(`${API_URL}/auth/forgot-password`, { email });
   },
-
-  async resetPassword(token: string, password: string): Promise<void> {
-    await axios.post(`${API_URL}/auth/reset-password`, { token, password });
+  async resetPassword(code: string, password: string, email: string): Promise<void> {
+    await axios.post(`${API_URL}/auth/reset-password`, { 
+      email,
+      code,
+      password,
+      confirmPassword: password
+    });
   }
 };
 
