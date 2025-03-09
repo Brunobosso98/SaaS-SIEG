@@ -11,37 +11,31 @@ export function validateCNPJ(cnpj: string): boolean {
   // Check if it has 14 digits
   if (cnpj.length !== 14) return false;
   
-  // Check for known invalid values
+  // Check for known invalid values (all same digits)
   if (/^(\d)\1{13}$/.test(cnpj)) return false;
   
-  // Validate verification digits
-  let size = cnpj.length - 2;
-  let numbers = cnpj.substring(0, size);
-  const digits = cnpj.substring(size);
+  // Calculate first verification digit
   let sum = 0;
-  let pos = size - 7;
-  
-  for (let i = size; i >= 1; i--) {
-    sum += parseInt(numbers.charAt(size - i)) * pos--;
-    if (pos < 2) pos = 9;
+  let weight = 5;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(cnpj.charAt(i)) * weight;
+    weight = (weight === 2) ? 9 : weight - 1;
   }
   
-  let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
-  if (result !== parseInt(digits.charAt(0))) return false;
+  const digit1 = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (parseInt(cnpj.charAt(12)) !== digit1) return false;
   
-  size = size + 1;
-  numbers = cnpj.substring(0, size);
+  // Calculate second verification digit
   sum = 0;
-  pos = size - 7;
-  
-  for (let i = size; i >= 1; i--) {
-    sum += parseInt(numbers.charAt(size - i)) * pos--;
-    if (pos < 2) pos = 9;
+  weight = 6;
+  for (let i = 0; i < 13; i++) {
+    sum += parseInt(cnpj.charAt(i)) * weight;
+    weight = (weight === 2) ? 9 : weight - 1;
   }
   
-  result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+  const digit2 = sum % 11 < 2 ? 0 : 11 - (sum % 11);
   
-  return result === parseInt(digits.charAt(1));
+  return parseInt(cnpj.charAt(13)) === digit2;
 }
 
 /**
