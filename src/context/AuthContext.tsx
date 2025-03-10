@@ -6,7 +6,7 @@ interface AuthContextType {
   user: AuthResponse['user'] | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => void;
   error: string | null;
 }
@@ -88,11 +88,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, confirmPassword: string) => {
     try {
       setError(null);
       setLoading(true);
-      const response = await authService.register({ name, email, password });
+      const response = await authService.register({ name, email, password, confirmPassword });
       setUser(response.user);
     } catch (err: unknown) {
       const apiError = err as ApiError;
