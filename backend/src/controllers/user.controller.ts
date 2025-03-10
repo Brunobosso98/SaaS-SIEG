@@ -38,6 +38,15 @@ interface PlanDetails {
   features: string[];
 }
 
+// Define document type enum
+enum DocumentType {
+  NFe = 1,
+  CTe = 2,
+  NFSe = 3,
+  NFCe = 4,
+  CFe = 5
+}
+
 // Get user profile
 export const getUserProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -132,6 +141,26 @@ export const getUserSubscription = async (req: AuthenticatedRequest, res: Respon
   }
 };
 
+// Get user settings
+export const getUserSettings = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    res.json(user.settings);
+  } catch (error) {
+    console.error('Error fetching user settings:', error);
+    res.status(500).json({ message: 'Server error while fetching settings' });
+  }
+};
+
 // Update user settings
 export const updateUserSettings = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -162,6 +191,402 @@ export const updateUserSettings = async (req: AuthenticatedRequest, res: Respons
   } catch (error) {
     console.error('Error updating user settings:', error);
     res.status(500).json({ message: 'Server error while updating settings' });
+  }
+};
+
+// Get document types
+export const getDocumentTypes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    res.json({
+      documentTypes: user.settings.documentTypes
+    });
+  } catch (error) {
+    console.error('Error fetching document types:', error);
+    res.status(500).json({ message: 'Server error while fetching document types' });
+  }
+};
+
+// Update document types
+export const updateDocumentTypes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const { documentType } = req.body;
+    
+    // Validate document type
+    if (!documentType || !Object.values(DocumentType).includes(Number(documentType))) {
+      res.status(400).json({ 
+        message: 'Invalid document type. Must be one of: 1 (NFe), 2 (CT-e), 3 (NFSe), 4 (NFCe), 5 (CF-e)' 
+      });
+      return;
+    }
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    // Convert document type number to string representation
+    let docTypeStr: string;
+    switch (Number(documentType)) {
+      case DocumentType.NFe: docTypeStr = 'nfe'; break;
+      case DocumentType.CTe: docTypeStr = 'cte'; break;
+      case DocumentType.NFSe: docTypeStr = 'nfse'; break;
+      case DocumentType.NFCe: docTypeStr = 'nfce'; break;
+      case DocumentType.CFe: docTypeStr = 'cfe'; break;
+      default: docTypeStr = '';
+    }
+    
+    if (docTypeStr === '') {
+      res.status(400).json({ message: 'Invalid document type' });
+      return;
+    }
+    
+    // Ensure settings and documentTypes are properly initialized
+    if (!user.settings) {
+      user.settings = {
+        documentTypes: [],
+        downloadConfig: {
+          directory: 'downloads',
+          retention: 7
+        },
+        notifications: {
+          email: true,
+          downloadComplete: true,
+          downloadFailed: true
+        },
+        schedule: {
+          frequency: 'daily',
+          times: ['08:00']
+        }
+      };
+    }
+    
+    if (!user.settings.documentTypes) {
+      user.settings.documentTypes = [];
+    }
+    
+    // Check if document type already exists
+    if (!user.settings.documentTypes.includes(docTypeStr)) {
+      // Add the new document type
+      user.settings.documentTypes.push(docTypeStr);
+      
+      // Explicitly mark the settings field as changed
+      user.changed('settings', true);
+      
+      // Save changes
+      await user.save();
+      
+      res.json({
+        message: 'Document type added successfully',
+        documentTypes: user.settings.documentTypes
+      });
+    } else {
+      res.status(400).json({
+        message: 'Document type already exists',
+        documentTypes: user.settings.documentTypes
+      });
+    }
+  } catch (error) {
+    console.error('Error updating document types:', error);
+    res.status(500).json({ message: 'Server error while updating document types' });
+  }
+};
+
+// Delete document type
+export const deleteDocumentType = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const { documentType } = req.body;
+    
+    // Validate document type
+    if (!documentType || !Object.values(DocumentType).includes(Number(documentType))) {
+      res.status(400).json({ 
+        message: 'Invalid document type. Must be one of: 1 (NFe), 2 (CT-e), 3 (NFSe), 4 (NFCe), 5 (CF-e)' 
+      });
+      return;
+    }
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    // Ensure settings and documentTypes are properly initialized
+    if (!user.settings) {
+      user.settings = {
+        documentTypes: [],
+        downloadConfig: {
+          directory: 'downloads',
+          retention: 7
+        },
+        notifications: {
+          email: true,
+          downloadComplete: true,
+          downloadFailed: true
+        },
+        schedule: {
+          frequency: 'daily',
+          times: ['08:00']
+        }
+      };
+    }
+    
+    // Ensure documentTypes is initialized as an array
+    if (!user.settings.documentTypes) {
+      user.settings.documentTypes = [];
+      user.changed('settings', true);
+      await user.save();
+      res.status(404).json({ message: 'Document type not found' });
+      return;
+    }
+    
+    // Convert document type number to string representation
+    let docTypeStr: string;
+    switch (Number(documentType)) {
+      case DocumentType.NFe: docTypeStr = 'nfe'; break;
+      case DocumentType.CTe: docTypeStr = 'cte'; break;
+      case DocumentType.NFSe: docTypeStr = 'nfse'; break;
+      case DocumentType.NFCe: docTypeStr = 'nfce'; break;
+      case DocumentType.CFe: docTypeStr = 'cfe'; break;
+      default: docTypeStr = '';
+    }
+    
+    if (docTypeStr === '') {
+      res.status(400).json({ message: 'Invalid document type' });
+      return;
+    }
+    
+    // Check if document type exists
+    const index = user.settings.documentTypes.indexOf(docTypeStr);
+    if (index === -1) {
+      res.status(404).json({ message: 'Document type not found' });
+      return;
+    }
+    
+    // Remove the document type
+    user.settings.documentTypes.splice(index, 1);
+    
+    // Explicitly mark the settings field as changed
+    user.changed('settings', true);
+    
+    // Save changes
+    await user.save();
+    
+    res.json({
+      message: 'Document type deleted successfully',
+      documentTypes: user.settings.documentTypes
+    });
+  } catch (error) {
+    console.error('Error deleting document type:', error);
+    res.status(500).json({ message: 'Server error while deleting document type' });
+  }
+};
+
+// Get download directory
+export const getDownloadDirectory = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    res.json({
+      directory: user.settings.downloadConfig.directory
+    });
+  } catch (error) {
+    console.error('Error fetching download directory:', error);
+    res.status(500).json({ message: 'Server error while fetching download directory' });
+  }
+};
+
+// Update download directory
+export const updateDownloadDirectory = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const { directory } = req.body;
+    
+    // Validate directory
+    if (!directory) {
+      res.status(400).json({ message: 'Directory is required' });
+      return;
+    }
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    // Update download directory
+    user.settings = {
+      ...user.settings,
+      downloadConfig: {
+        ...user.settings.downloadConfig,
+        directory
+      }
+    } as UserSettings;
+    
+    // Save changes
+    await user.save();
+    
+    res.json({
+      message: 'Download directory updated successfully',
+      directory: user.settings.downloadConfig.directory
+    });
+  } catch (error) {
+    console.error('Error updating download directory:', error);
+    res.status(500).json({ message: 'Server error while updating download directory' });
+  }
+};
+
+// Get retention period
+export const getRetentionPeriod = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    res.json({
+      retention: user.settings.downloadConfig.retention
+    });
+  } catch (error) {
+    console.error('Error fetching retention period:', error);
+    res.status(500).json({ message: 'Server error while fetching retention period' });
+  }
+};
+
+// Update retention period
+export const updateRetentionPeriod = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const { retention } = req.body;
+    
+    // Validate retention
+    if (retention === undefined || retention < 1) {
+      res.status(400).json({ message: 'Valid retention period is required' });
+      return;
+    }
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    // Update retention period
+    user.settings = {
+      ...user.settings,
+      downloadConfig: {
+        ...user.settings.downloadConfig,
+        retention
+      }
+    } as UserSettings;
+    
+    // Save changes
+    await user.save();
+    
+    res.json({
+      message: 'Retention period updated successfully',
+      retention: user.settings.downloadConfig.retention
+    });
+  } catch (error) {
+    console.error('Error updating retention period:', error);
+    res.status(500).json({ message: 'Server error while updating retention period' });
+  }
+};
+
+// Get notification settings
+export const getNotificationSettings = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    res.json({
+      notifications: user.settings.notifications
+    });
+  } catch (error) {
+    console.error('Error fetching notification settings:', error);
+    res.status(500).json({ message: 'Server error while fetching notification settings' });
+  }
+};
+
+// Update notification settings
+export const updateNotificationSettings = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const { notifications } = req.body;
+    
+    // Validate notifications
+    if (!notifications) {
+      res.status(400).json({ message: 'Notification settings are required' });
+      return;
+    }
+    
+    // Find user by ID
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    // Update notification settings
+    user.settings = {
+      ...user.settings,
+      notifications: {
+        ...user.settings.notifications,
+        ...notifications
+      }
+    } as UserSettings;
+    
+    // Save changes
+    await user.save();
+    
+    res.json({
+      message: 'Notification settings updated successfully',
+      notifications: user.settings.notifications
+    });
+  } catch (error) {
+    console.error('Error updating notification settings:', error);
+    res.status(500).json({ message: 'Server error while updating notification settings' });
   }
 };
 
@@ -205,6 +630,7 @@ export const saveUserSiegKey = async (req: AuthenticatedRequest, res: Response):
     res.status(500).json({ message: 'Server error while managing SIEG key' });
   }
 };
+
 // Get user CNPJs
 export const getUserCNPJs = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -266,6 +692,7 @@ function maskSiegKey(key: string): string {
   
   return `${firstFour}${masked}${lastFour}`;
 }
+
 // Update user plan
 export const updateUserPlan = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {

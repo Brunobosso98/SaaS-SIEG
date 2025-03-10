@@ -5,10 +5,12 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 ## Perfil de Usuário
 
 ### Obter Perfil do Usuário
+
 **MÉTODO:** GET  
 **URL:** http://localhost:5000/api/users/profile  
 **AUTHORIZATION:** Bearer Token  
 **RESPOSTA:**
+
 ```json
 {
   "id": "uuid-do-usuario",
@@ -34,17 +36,21 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 ```
 
 ### Atualizar Perfil do Usuário
+
 **MÉTODO:** PUT  
 **URL:** http://localhost:5000/api/users/profile  
 **AUTHORIZATION:** Bearer Token  
 **BODY (json):**
+
 ```json
 {
   "name": "Novo Nome do Usuário",
   "email": "novo.email@exemplo.com"
 }
 ```
+
 **RESPOSTA:**
+
 ```json
 {
   "message": "Profile updated successfully",
@@ -59,10 +65,12 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 ## Assinatura e Planos
 
 ### Obter Detalhes da Assinatura
+
 **MÉTODO:** GET  
 **URL:** http://localhost:5000/api/users/subscription
 **AUTHORIZATION:** Bearer Token  
 **RESPOSTA:**
+
 ```json
 {
   "currentPlan": "professional",
@@ -81,13 +89,59 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 }
 ```
 
-## Configurações
+### Atualizar Plano do Usuário
 
-### Atualizar Configurações do Usuário
+**MÉTODO:** PUT  
+**URL:** http://localhost:5000/api/users/subscription  
+**AUTHORIZATION:** Bearer Token  
+**BODY (json):**
+
+```json
+{
+  "plan": "professional"
+}
+```
+
+**RESPOSTA:**
+
+```json
+{
+  "message": "Plan updated successfully",
+  "plan": "professional"
+}
+```
+
+## Configurações Gerais
+
+### Obter Todas as Configurações do Usuário
+
+**MÉTODO:** GET  
+**URL:** http://localhost:5000/api/users/settings  
+**AUTHORIZATION:** Bearer Token  
+**RESPOSTA:**
+
+```json
+{
+  "documentTypes": ["nfe", "nfce", "cte"],
+  "downloadConfig": {
+    "directory": "meus-documentos/xml",
+    "retention": 15
+  },
+  "notifications": {
+    "email": true,
+    "downloadComplete": false,
+    "downloadFailed": true
+  }
+}
+```
+
+### Atualizar Todas as Configurações do Usuário
+
 **MÉTODO:** PUT  
 **URL:** http://localhost:5000/api/users/settings  
 **AUTHORIZATION:** Bearer Token  
 **BODY (json):**
+
 ```json
 {
   "settings": {
@@ -104,7 +158,9 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
   }
 }
 ```
+
 **RESPOSTA:**
+
 ```json
 {
   "message": "Settings updated successfully",
@@ -123,18 +179,158 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 }
 ```
 
-### Obter Configurações do Usuário
+## Tipos de Documentos
+
+### Obter Tipos de Documentos
+
 **MÉTODO:** GET  
-**URL:** http://localhost:5000/api/users/settings  
+**URL:** http://localhost:5000/api/users/settings/document-types  
 **AUTHORIZATION:** Bearer Token  
 **RESPOSTA:**
+
 ```json
 {
-  "documentTypes": ["nfe", "nfce", "cte"],
-  "downloadConfig": {
-    "directory": "meus-documentos/xml",
-    "retention": 15
-  },
+  "documentTypes": ["nfe", "nfce", "cte"]
+}
+```
+
+### Adicionar Tipo de Documento
+
+**MÉTODO:** POST  
+**URL:** http://localhost:5000/api/users/settings/document-types  
+**AUTHORIZATION:** Bearer Token  
+**BODY (json):**
+
+```json
+{
+  "documentType": 1
+}
+```
+
+**RESPOSTA:**
+
+```json
+{
+  "message": "Document type added successfully",
+  "documentTypes": ["nfe", "nfce", "cte"]
+}
+```
+
+### Remover Tipo de Documento
+
+**MÉTODO:** DELETE  
+**URL:** http://localhost:5000/api/users/settings/document-types  
+**AUTHORIZATION:** Bearer Token  
+**BODY (json):**
+
+```json
+{
+  "documentType": 1
+}
+```
+
+**RESPOSTA:**
+
+```json
+{
+  "message": "Document type removed successfully",
+  "documentTypes": ["nfce", "cte"]
+}
+```
+
+> **Nota:** Os tipos de documentos são representados por números:
+>
+> - 1: NFe (Nota Fiscal Eletrônica)
+> - 2: CT-e (Conhecimento de Transporte Eletrônico)
+> - 3: NFSe (Nota Fiscal de Serviço Eletrônica)
+> - 4: NFCe (Nota Fiscal de Consumidor Eletrônica)
+> - 5: CF-e (Cupom Fiscal Eletrônico)
+
+## Diretório de Download
+
+### Obter Diretório de Download
+
+**MÉTODO:** GET  
+**URL:** http://localhost:5000/api/users/settings/download-directory  
+**AUTHORIZATION:** Bearer Token  
+**RESPOSTA:**
+
+```json
+{
+  "directory": "meus-documentos/xml"
+}
+```
+
+### Atualizar Diretório de Download
+
+**MÉTODO:** PUT  
+**URL:** http://localhost:5000/api/users/settings/download-directory  
+**AUTHORIZATION:** Bearer Token  
+**BODY (json):**
+
+```json
+{
+  "directory": "nova-pasta/documentos-fiscais"
+}
+```
+
+**RESPOSTA:**
+
+```json
+{
+  "message": "Download directory updated successfully",
+  "directory": "nova-pasta/documentos-fiscais"
+}
+```
+
+## Período de Retenção
+
+### Obter Período de Retenção
+
+**MÉTODO:** GET  
+**URL:** http://localhost:5000/api/users/settings/retention  
+**AUTHORIZATION:** Bearer Token  
+**RESPOSTA:**
+
+```json
+{
+  "retention": 15
+}
+```
+
+### Atualizar Período de Retenção
+
+**MÉTODO:** PUT  
+**URL:** http://localhost:5000/api/users/settings/retention  
+**AUTHORIZATION:** Bearer Token  
+**BODY (json):**
+
+```json
+{
+  "retention": 30
+}
+```
+
+**RESPOSTA:**
+
+```json
+{
+  "message": "Retention period updated successfully",
+  "retention": 30
+}
+```
+
+## Configurações de Notificação
+
+### Obter Configurações de Notificação
+
+**MÉTODO:** GET  
+**URL:** http://localhost:5000/api/users/settings/notifications  
+**AUTHORIZATION:** Bearer Token  
+**RESPOSTA:**
+
+```json
+{
   "notifications": {
     "email": true,
     "downloadComplete": false,
@@ -143,19 +339,53 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 }
 ```
 
+### Atualizar Configurações de Notificação
+
+**MÉTODO:** PUT  
+**URL:** http://localhost:5000/api/users/settings/notifications  
+**AUTHORIZATION:** Bearer Token  
+**BODY (json):**
+
+```json
+{
+  "notifications": {
+    "email": true,
+    "downloadComplete": true,
+    "downloadFailed": false
+  }
+}
+```
+
+**RESPOSTA:**
+
+```json
+{
+  "message": "Notification settings updated successfully",
+  "notifications": {
+    "email": true,
+    "downloadComplete": true,
+    "downloadFailed": false
+  }
+}
+```
+
 ## Chave SIEG
 
 ### Salvar Chave SIEG
+
 **MÉTODO:** POST  
 **URL:** http://localhost:5000/api/users/sieg-key
 **AUTHORIZATION:** Bearer Token  
 **BODY (json):**
+
 ```json
 {
   "siegKey": "sua-chave-sieg-aqui-12345678"
 }
 ```
+
 **RESPOSTA:**
+
 ```json
 {
   "message": "SIEG key saved successfully"
@@ -163,10 +393,12 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 ```
 
 ### Obter Chave SIEG
+
 **MÉTODO:** GET  
 **URL:** http://localhost:5000/api/users/sieg-key  
 **AUTHORIZATION:** Bearer Token  
 **RESPOSTA:**
+
 ```json
 {
   "siegKey": "sua-****-aqui-5678"
@@ -176,10 +408,12 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 ## CNPJs do Usuário
 
 ### Listar CNPJs do Usuário
+
 **MÉTODO:** GET  
 **URL:** http://localhost:5000/api/users/cnpjs  
 **AUTHORIZATION:** Bearer Token  
 **RESPOSTA:**
+
 ```json
 [
   {
@@ -218,12 +452,14 @@ Este documento descreve os endpoints disponíveis para gerenciamento de perfil e
 O sistema oferece os seguintes planos de assinatura:
 
 ### Plano Free
+
 - 1 CNPJ
 - Download automático 1x ao dia
 - 7 dias de retenção de arquivos
 - Download manual
 
 ### Plano Starter
+
 - Até 3 CNPJs
 - Download automático 1x ao dia
 - 7 dias de retenção de arquivos
@@ -232,6 +468,7 @@ O sistema oferece os seguintes planos de assinatura:
 - Download manual
 
 ### Plano Professional
+
 - Até 10 CNPJs
 - Download automático 2x ao dia
 - 30 dias de retenção de arquivos
@@ -241,6 +478,7 @@ O sistema oferece os seguintes planos de assinatura:
 - Múltiplos horários de download
 
 ### Plano Enterprise
+
 - Até 30 CNPJs
 - Download automático 4x ao dia
 - 90 dias de retenção de arquivos
