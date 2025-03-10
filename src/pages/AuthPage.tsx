@@ -48,7 +48,7 @@ export function AuthPage({ type }: AuthPageProps) {
           return;
         }
         
-        await register(name, email, password);
+        await register(name, email, password, confirmPassword);
         toast({
           title: "Conta criada com sucesso",
           description: "Verifique seu email para ativar sua conta."
