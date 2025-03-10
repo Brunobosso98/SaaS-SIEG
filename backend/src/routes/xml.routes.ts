@@ -8,7 +8,9 @@ import {
   getXMLById,
   deleteXML,
   viewXML,
-  configureXMLDownloadSettings
+  configureXMLDownloadSettings,
+  executeUserXmlDownload,
+  getXmlDownloadStatus
 } from '../controllers/xml.controller';
 
 // Import middleware
@@ -19,6 +21,8 @@ router.use(authenticate);
 
 // XML routes
 router.post('/download', downloadXML as unknown as RequestHandler);
+router.post('/execute-download', executeUserXmlDownload as unknown as RequestHandler);
+router.get('/download-status', getXmlDownloadStatus as unknown as RequestHandler);
 router.get('/history', getXMLHistory as unknown as RequestHandler);
 router.get('/:id', getXMLById as unknown as RequestHandler);
 router.delete('/:id', deleteXML as unknown as RequestHandler);

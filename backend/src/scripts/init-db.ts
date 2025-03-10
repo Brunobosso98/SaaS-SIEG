@@ -10,6 +10,7 @@ import { sequelize, testConnection } from '../config/database';
 import { QueryTypes } from 'sequelize'; // Add this import
 import User from '../models/user.model';
 import CNPJ from '../models/cnpj.model';
+import XML from '../models/xml.model'; // Add XML model import
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -35,13 +36,27 @@ async function initDatabase() {
     CNPJ.belongsTo(User, {
       targetKey: 'id',
       foreignKey: 'userId',
-      as: 'user'
+      as: 'cnpjUser' // Changed from 'user' to 'cnpjUser'
+    });
+    
+    // Add XML associations
+    CNPJ.hasMany(XML, {
+      sourceKey: 'id',
+      foreignKey: 'cnpjId',
+      as: 'xmls'
+    });
+    
+    XML.belongsTo(CNPJ, {
+      targetKey: 'id',
+      foreignKey: 'cnpjId',
+      as: 'xmlCnpj' // Changed from 'cnpj' to 'xmlCnpj'
     });
     
     // Log models being synced
     console.log('Models to sync:');
     console.log('- User model:', User.name);
     console.log('- CNPJ model:', CNPJ.name);
+    console.log('- XML model:', XML.name);
     
     // Sync all models with database
     console.log('Syncing database models...');

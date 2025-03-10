@@ -17,6 +17,9 @@ import userRoutes from './routes/user.routes';
 import cnpjRoutes from './routes/cnpj.routes';
 import xmlRoutes from './routes/xml.routes';
 
+// Import XML download scheduler
+import { initializeXmlDownloadScheduler } from './scripts/scheduled-xml-download';
+
 // Create Express app
 const app: Express = express();
 
@@ -48,6 +51,10 @@ app.listen(PORT, async () => {
     // Test database connection
     await testConnection();
     console.log(`Server is running on port ${PORT}`);
+    
+    // Initialize XML download scheduler
+    initializeXmlDownloadScheduler();
+    console.log('XML download scheduler initialized');
   } catch (error) {
     console.error('Failed to start server:', error);
   }

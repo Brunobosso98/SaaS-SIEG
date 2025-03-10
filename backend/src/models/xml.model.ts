@@ -135,6 +135,7 @@ XML.init(
   {
     sequelize,
     modelName: 'XML',
+    tableName: 'xmls', // Explicitly set table name to avoid pluralization issues
     timestamps: true,
     indexes: [
       {

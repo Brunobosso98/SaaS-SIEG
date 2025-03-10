@@ -5,6 +5,7 @@ import User from '../models/user.model';
 import { Op } from 'sequelize';
 import path from 'path';
 import fs from 'fs';
+import SiegService from '../services/sieg.service';
 
 // Define request types
 interface AuthenticatedRequest extends Request {
@@ -90,15 +91,123 @@ export const downloadXML = async (req: DownloadXMLRequest, res: Response): Promi
       return;
     }
     
-    // In a real app, this would call the SIEG API to download XML files
-    // For now, we'll simulate a successful download
+    // Use document types from request or user settings
+    const docTypes = documentTypes && documentTypes.length > 0 
+      ? documentTypes 
+      : user.settings?.documentTypes || ['nfe'];
     
-    // Create a record of the download
+    // Use date range from request or default (5 days)
+    const today = new Date();
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    
+    const startDateToUse = startDate || fiveDaysAgo.toISOString().split('T')[0];
+    const endDateToUse = endDate || today.toISOString().split('T')[0];
+    
+    // Estimate completion time (roughly 1 minute per CNPJ per document type)
+    const estimatedMinutes = docTypes.length * 1;
+    const estimatedCompletion = new Date(Date.now() + (estimatedMinutes * 60 * 1000));
+    
+    // Create a job ID for tracking
+    const jobId = `xml-download-${userId}-${Date.now()}`;
+    
+    // Start the download process asynchronously
+    setTimeout(async () => {
+      try {
+        await SiegService.downloadXmlsForCnpj(
+          userId,
+          cnpjId,
+          docTypes,
+          startDateToUse,
+          endDateToUse,
+          'manual'
+        );
+      } catch (error) {
+        console.error(`Error in background XML download for job ${jobId}:`, error);
+      }
+    }, 0);
+    
+    // Return immediate response with job ID and estimated completion time
+    res.json({
+      message: 'XML download initiated',
+      jobId,
+      estimatedCompletion,
+      details: {
+        cnpj: cnpj.cnpj,
+        documentTypes: docTypes,
+        startDate: startDateToUse,
+        endDate: endDateToUse
+      }
+    });
+  } catch (error) {
+    console.error('Error initiating XML download:', error);
+    res.status(500).json({ message: 'Server error while initiating XML download' });
+  }
+};
+
+// Execute XML download for a specific user (manual trigger)
+export const executeUserXmlDownload = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    
+    // Import the function from the scheduled-xml-download script
+    const { executeXmlDownload } = require('../scripts/scheduled-xml-download');
+    
+    // Execute the download
+    const result = await executeXmlDownload(userId);
+    
+    if (result.success) {
+      res.json({
+        message: 'XML download executed successfully',
+        details: result
+      });
+    } else {
+      res.status(400).json({
+        message: 'XML download failed',
+        error: result.message
+      });
+    }
+  } catch (error) {
+    console.error('Error executing XML download:', error);
+    res.status(500).json({ message: 'Server error while executing XML download' });
+  }
+};
+
+// Get XML download status
+export const getXmlDownloadStatus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    // In a real implementation, this would check the status of a background job
+    // For now, we'll return a mock status
+    res.json({
+      status: 'completed',
+      progress: 100,
+      message: 'XML download completed successfully',
+      completedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error checking XML download status:', error);
+    res.status(500).json({ message: 'Server error while checking XML download status' });
+  }
+};
+
+// Create a record of the download (example for reference)
+const createXmlRecord = async (userId: string, cnpjId: string, documentType: string, startDate?: string, endDate?: string, res?: Response) => {
+  try {
+    // Get user for settings
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      if (res) res.status(404).json({ message: 'User not found' });
+      return null;
+    }
+    
+    const retentionDays = user.settings?.downloadConfig?.retention || 30;
+    
     const xml = await XML.create({
       fileName: `example_${Date.now()}.xml`,
       filePath: `/downloads/${userId}/${cnpjId}/example.xml`,
       fileSize: 1024, // Example size in bytes
-      documentType: documentTypes?.[0] || 'nfe',
+      documentType: documentType?.[0] || 'nfe',
       documentNumber: '12345',
       documentDate: new Date(),
       downloadDate: new Date(),
@@ -106,25 +215,30 @@ export const downloadXML = async (req: DownloadXMLRequest, res: Response): Promi
       downloadType: 'manual',
       cnpjId,
       userId,
-      expiryDate: new Date(Date.now() + (user.settings.downloadConfig.retention * 24 * 60 * 60 * 1000)), // Based on retention days
+      expiryDate: new Date(Date.now() + (retentionDays * 24 * 60 * 60 * 1000)), // Based on retention days
       metadata: {
-        requestParams: { documentTypes, startDate, endDate }
+        requestParams: { documentType, startDate, endDate }
       }
     });
     
-    res.json({
-      message: 'XML download initiated successfully',
-      xml: {
-        id: xml.id,
-        fileName: xml.fileName,
-        documentType: xml.documentType,
-        status: xml.status,
-        downloadDate: xml.downloadDate
-      }
-    });
+    if (res) {
+      res.json({
+        message: 'XML download initiated successfully',
+        xml: {
+          id: xml.id,
+          fileName: xml.fileName,
+          documentType: xml.documentType,
+          status: xml.status,
+          downloadDate: xml.downloadDate
+        }
+      });
+    }
+    
+    return xml;
   } catch (error) {
     console.error('Error downloading XML:', error);
-    res.status(500).json({ message: 'Server error while downloading XML' });
+    if (res) res.status(500).json({ message: 'Server error while downloading XML' });
+    return null;
   }
 };
 
