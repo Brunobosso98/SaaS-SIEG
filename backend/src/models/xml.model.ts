@@ -3,7 +3,6 @@ import { sequelize } from '../config/database';
 import User from './user.model';
 import CNPJ from './cnpj.model';
 
-// Define the XML attributes interface
 interface XMLAttributes {
   id: string;
   fileName: string;
@@ -16,18 +15,16 @@ interface XMLAttributes {
   status: 'success' | 'failed' | 'processing';
   errorMessage: string | null;
   downloadType: 'automatic' | 'manual';
-  cnpjId: string;
-  userId: string;
+  cnpj_id: string;
+  user_id: string;
   expiryDate: Date | null;
   metadata: Record<string, unknown> | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-// Define the attributes for XML creation
 type XMLCreationAttributes = Optional<XMLAttributes, 'id' | 'downloadDate'>;
 
-// Define the XML model class
 class XML extends Model<XMLAttributes, XMLCreationAttributes> implements XMLAttributes {
   public id!: string;
   public fileName!: string;
@@ -40,17 +37,15 @@ class XML extends Model<XMLAttributes, XMLCreationAttributes> implements XMLAttr
   public status!: 'success' | 'failed' | 'processing';
   public errorMessage!: string | null;
   public downloadType!: 'automatic' | 'manual';
-  public cnpjId!: string;
-  public userId!: string;
+  public cnpj_id!: string;
+  public user_id!: string;
   public expiryDate!: Date | null;
   public metadata!: Record<string, unknown> | null;
-
-  // Timestamps
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
   // Associations
-  public readonly user?: User;
+  public readonly owner?: User;
   public readonly cnpj?: CNPJ;
 }
 
@@ -76,6 +71,7 @@ XML.init(
     documentType: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'document_type', // Enforce snake_case column name
       validate: {
         isIn: [['nfe', 'nfce', 'cte', 'mdfe', 'nfse']]
       }
@@ -91,7 +87,8 @@ XML.init(
     downloadDate: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW
+      defaultValue: DataTypes.NOW,
+      field: 'download_date' // Enforce snake_case column name
     },
     status: {
       type: DataTypes.ENUM('success', 'failed', 'processing'),
@@ -107,7 +104,7 @@ XML.init(
       allowNull: false,
       defaultValue: 'automatic'
     },
-    cnpjId: {
+    cnpj_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
@@ -115,7 +112,7 @@ XML.init(
         key: 'id'
       }
     },
-    userId: {
+    user_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
@@ -135,29 +132,25 @@ XML.init(
   {
     sequelize,
     modelName: 'XML',
+    tableName: 'xmls', // Explicitly set table name to avoid pluralization issues
     timestamps: true,
     indexes: [
       {
-        fields: ['userId']
+        fields: ['user_id']
       },
       {
-        fields: ['cnpjId']
+        fields: ['cnpj_id']
       },
       {
-        fields: ['documentType']
+        fields: ['document_type'], // Use snake_case here
+        name: 'xmls_document_type' // Explicitly name the index
       },
       {
-        fields: ['downloadDate']
+        fields: ['download_date'],
+        name: 'xmls_download_date'
       }
     ]
   }
 );
-
-// Associations
-XML.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-User.hasMany(XML, { foreignKey: 'userId', as: 'xmls' });
-
-XML.belongsTo(CNPJ, { foreignKey: 'cnpjId', as: 'cnpj' });
-CNPJ.hasMany(XML, { foreignKey: 'cnpjId', as: 'xmls' });
 
 export default XML;

@@ -10,6 +10,7 @@ import { sequelize, testConnection } from '../config/database';
 import { QueryTypes } from 'sequelize'; // Add this import
 import User from '../models/user.model';
 import CNPJ from '../models/cnpj.model';
+import XML from '../models/xml.model'; // Add XML model import
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -38,14 +39,33 @@ async function initDatabase() {
       as: 'user'
     });
     
+    // Add XML associations
+    
     // Log models being synced
     console.log('Models to sync:');
     console.log('- User model:', User.name);
     console.log('- CNPJ model:', CNPJ.name);
+    console.log('- XML model:', XML.name);
     
     // Sync all models with database
     console.log('Syncing database models...');
+    
+    // Drop the 'xmls' table if it exists
+    try {
+      await sequelize.getQueryInterface().dropTable('xmls');
+      console.log("Dropped 'xmls' table.");
+    } catch (error) {
+      console.warn("Error dropping 'xmls' table (it might not exist yet):", error);
+    }
+
     await sequelize.sync({ force: true });
+
+    // Log the SQL for index creation (for debugging)
+    const xmlModel = sequelize.models.XML;
+    if (xmlModel) {
+      const indexes = await sequelize.getQueryInterface().showIndex(xmlModel.tableName);
+      console.log("Indexes for 'xmls' table:", indexes);
+    }
     
     // Log all tables after sync
     const tables = await sequelize.query(`

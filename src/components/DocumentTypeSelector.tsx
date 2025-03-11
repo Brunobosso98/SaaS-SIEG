@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { FileCheck, Loader2 } from "lucide-react";
-import axios from 'axios';
+import { fetchDocumentTypes, addDocumentType, removeDocumentType, saveDocumentTypePreferences } from "@/services/document-types.service";
 
 interface DocumentType {
   id: string;
@@ -37,65 +37,25 @@ export function DocumentTypeSelector() {
     "cfe": 5
   };
 
-  // Get the auth token
-  const getToken = (): string | null => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const userData = JSON.parse(userStr);
-        return userData.token;
-      } catch (e) {
-        console.error('Error parsing user data from localStorage:', e);
-        return null;
-      }
-    }
-    return null;
-  };
-
   // Fetch document types on component mount
   useEffect(() => {
-    const fetchDocumentTypes = async () => {
-      const token = getToken();
-      if (!token) {
-        setError('Usuário não autenticado');
-        setLoading(false);
-        return;
-      }
-
+    const loadDocumentTypes = async () => {
       try {
-        const response = await axios.get(
-          'http://localhost:5000/api/users/settings/document-types',
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-        
-        setSelectedTypes(response.data.documentTypes || []);
+        const response = await fetchDocumentTypes();
+        setSelectedTypes(response.documentTypes || []);
         setLoading(false);
       } catch (error: any) {
         console.error('Error fetching document types:', error);
-        setError('Erro ao carregar tipos de documentos');
+        setError(error.message || 'Erro ao carregar tipos de documentos');
         setLoading(false);
       }
     };
 
-    fetchDocumentTypes();
+    loadDocumentTypes();
   }, []);
 
   // Handle document type change (add or remove)
   const handleTypeChange = async (typeId: string) => {
-    const token = getToken();
-    if (!token) {
-      toast({
-        title: "Erro",
-        description: "Usuário não autenticado",
-        variant: "destructive"
-      });
-      return;
-    }
-
     const isRemoving = selectedTypes.includes(typeId);
     const documentType = documentTypeMap[typeId];
     
@@ -104,15 +64,7 @@ export function DocumentTypeSelector() {
       
       if (isRemoving) {
         // Remove document type
-        await axios.delete(
-          'http://localhost:5000/api/users/settings/document-types',
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            },
-            data: { documentType }
-          }
-        );
+        await removeDocumentType(documentType);
         
         setSelectedTypes(prev => prev.filter(id => id !== typeId));
         
@@ -122,15 +74,7 @@ export function DocumentTypeSelector() {
         });
       } else {
         // Add document type
-        await axios.post(
-          'http://localhost:5000/api/users/settings/document-types',
-          { documentType },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
+        await addDocumentType(documentType);
         
         setSelectedTypes(prev => [...prev, typeId]);
         
@@ -143,7 +87,7 @@ export function DocumentTypeSelector() {
       console.error('Error updating document type:', error);
       toast({
         title: "Erro",
-        description: error.response?.data?.message || "Erro ao atualizar tipo de documento",
+        description: error.message || "Erro ao atualizar tipo de documento",
         variant: "destructive"
       });
     } finally {
@@ -152,16 +96,6 @@ export function DocumentTypeSelector() {
   };
 
   const handleSelectAll = async () => {
-    const token = getToken();
-    if (!token) {
-      toast({
-        title: "Erro",
-        description: "Usuário não autenticado",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
       setSaving(true);
       
@@ -173,15 +107,7 @@ export function DocumentTypeSelector() {
       // Add each document type
       for (const typeId of typesToAdd) {
         const documentType = documentTypeMap[typeId];
-        await axios.post(
-          'http://localhost:5000/api/users/settings/document-types',
-          { documentType },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
+        await addDocumentType(documentType);
       }
       
       setSelectedTypes(documentTypes.map(type => type.id));
@@ -194,7 +120,7 @@ export function DocumentTypeSelector() {
       console.error('Error selecting all document types:', error);
       toast({
         title: "Erro",
-        description: error.response?.data?.message || "Erro ao selecionar todos os tipos",
+        description: error.message || "Erro ao selecionar todos os tipos",
         variant: "destructive"
       });
     } finally {
@@ -203,33 +129,11 @@ export function DocumentTypeSelector() {
   };
 
   const handleSavePreferences = async () => {
-    const token = getToken();
-    if (!token) {
-      toast({
-        title: "Erro",
-        description: "Usuário não autenticado",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
       setSaving(true);
       
       // Update all settings at once
-      await axios.put(
-        'http://localhost:5000/api/users/settings',
-        {
-          settings: {
-            documentTypes: selectedTypes
-          }
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      await saveDocumentTypePreferences(selectedTypes);
       
       toast({
         title: "Preferências salvas",
@@ -239,7 +143,7 @@ export function DocumentTypeSelector() {
       console.error('Error saving preferences:', error);
       toast({
         title: "Erro",
-        description: error.response?.data?.message || "Erro ao salvar preferências",
+        description: error.message || "Erro ao salvar preferências",
         variant: "destructive"
       });
     } finally {

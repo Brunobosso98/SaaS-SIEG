@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import User from '../models/user.model';
 import CNPJ from '../models/cnpj.model';
+import XML from '../models/xml.model';
 
 // Define interfaces
 interface AuthenticatedRequest extends Request {

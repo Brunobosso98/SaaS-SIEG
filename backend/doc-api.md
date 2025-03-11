@@ -21,3 +21,10 @@ EMAIL_PASS=your_email_password
 # XML Storage Configuration
 XML_STORAGE_PATH=./storage/xml
 XML_RETENTION_DAYS=15
+
+Na automação, o que deve ser pego diretamente no banco de dados para executar:
+1. CNPJs
+2. SIEG KEY
+3. Data Inicial e Data Final (data base é 5 dias antes do dia da execução até o dia atual)
+4. Tipo de Documento
+5. Token do usuário, para ser executado com as configurações do mesmo

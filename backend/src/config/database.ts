@@ -26,13 +26,18 @@ const sequelize = new Sequelize({
   },
 });
 
-// Test the connection
+// Test the connection and sync models
 const testConnection = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
+    
+    // Sync all models with the database
+    // This will create tables if they don't exist
+    await sequelize.sync();
+    console.log('Database models synchronized successfully.');
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('Unable to connect to the database or sync models:', error);
     throw error; // Re-throw to allow handling in calling code
   }
 };
