@@ -20,8 +20,17 @@ interface XmlData {
   xmlHash?: string; // Optional property for XML hash
 }
 
+interface DocTypeConfig {
+  xmlType: number;
+  baseDir: string;
+  namespace: string;
+  numeroTag: string;
+  tipoTag: string;
+  tipoMap: Record<string, string>;
+}
+
 // Document type configurations
-const DOC_TYPES: Record<string, any> = {
+const DOC_TYPES: Record<string, DocTypeConfig> = {
   'nfe': {
     xmlType: 1,
     baseDir: 'NFE',
@@ -45,8 +54,7 @@ const DOC_TYPES: Record<string, any> = {
     numeroTag: 'nNF',
     tipoTag: 'tpNF',
     tipoMap: { '0': 'entrada', '1': 'saida' }
-  }
-  ,
+  },
   'nfce': {
     xmlType: 4, // Same as NFe but with different identification
     baseDir: 'NFCE',
@@ -54,8 +62,7 @@ const DOC_TYPES: Record<string, any> = {
     numeroTag: 'nNF',
     tipoTag: 'tpNF',
     tipoMap: { '0': 'entrada', '1': 'saida' }
-  }
-  ,
+  },
   'cfe': {
     xmlType: 5, // Same as NFe but with different identification
     baseDir: 'cfe',
@@ -108,11 +115,11 @@ class SiegService {
         console.info(`📦 Request payload: ${JSON.stringify(payload)}`);
         const response = await axios.post(url, payload, { headers });
         return response;
-      } catch (error: any) {
+      } catch (error: unknown) {
         // If it's a 404 with "No XML file found" message, return it as it's not an error
-        if (error.response && error.response.status === 404) {
+        if (axios.isAxiosError(error) && error.response && error.response.status === 404) {
           const errorData = error.response.data;
-          if (Array.isArray(errorData) && errorData.length > 0 && 
+          if (Array.isArray(errorData) && errorData.length > 0 &&
               errorData[0].includes('Nenhum arquivo XML localizado')) {
             return error.response;
           }
@@ -121,19 +128,19 @@ class SiegService {
         // Log detailed error information
         console.error(`❌ API request failed (Attempt ${attempt + 1}/${maxRetries}):`);
         console.error(`🔑 API Key used: ${siegKey.substring(0, 3)}...${siegKey.substring(siegKey.length - 3)}`);
-        
-        if (error.response) {
+
+        if (axios.isAxiosError(error) && error.response) {
           // The request was made and the server responded with a status code outside of 2xx range
           console.error(`📊 Status: ${error.response.status}`);
           console.error(`📋 Status Text: ${error.response.statusText}`);
           console.error(`🧩 Headers: ${JSON.stringify(error.response.headers)}`);
           console.error(`📄 Response data: ${JSON.stringify(error.response.data)}`);
-        } else if (error.request) {
+        } else if (axios.isAxiosError(error) && error.request) {
           // The request was made but no response was received
           console.error('📭 No response received from server');
         } else {
           // Something happened in setting up the request that triggered an Error
-          console.error(`🔧 Error setting up request: ${error.message}`);
+          console.error(`🔧 Error setting up request: ${error instanceof Error ? error.message : String(error)}`);
         }
 
         // If it's the last attempt, return null
@@ -143,7 +150,7 @@ class SiegService {
         }
 
         // Otherwise, wait and retry
-        console.warn(`⚠️ Attempt ${attempt + 1} of ${maxRetries} failed. Status: ${error.response?.status || 'Network Error'}`);
+        console.warn(`⚠️ Attempt ${attempt + 1} of ${maxRetries} failed. Status: ${axios.isAxiosError(error) && error.response?.status || 'Network Error'}`);
         console.info(`🔄 Waiting ${retryDelay / 1000} seconds before retrying...`);
         await new Promise(resolve => setTimeout(resolve, retryDelay));
       }
@@ -208,7 +215,7 @@ class SiegService {
   /**
    * Saves XML file to disk in the appropriate folder structure
    */
-  private async saveXmlFile(xmlContent: string, xmlData: any, userId: string, cnpjId: string, downloadType: 'automatic' | 'manual') {
+  private async saveXmlFile(xmlContent: string, xmlData: XmlData, userId: string, cnpj_id: string, downloadType: 'automatic' | 'manual') {
     try {
       // Get user settings for base directory
       const user = await User.findByPk(userId);
@@ -220,7 +227,7 @@ class SiegService {
       const mesNome = MESES[xmlData.mes] || xmlData.mes;
       
       // Determine base directory from user settings or use default
-      let baseDir = user.settings?.downloadConfig?.directory || path.join(process.cwd(), 'downloads');
+      const baseDir = user.settings?.downloadConfig?.directory || path.join(process.cwd(), 'downloads');
       
       // Create full directory path
       const dirPath = path.join(
@@ -263,16 +270,16 @@ class SiegService {
         status: 'success',
         errorMessage: null,
         downloadType,
-        cnpjId,
-        userId,
-        expiryDate,
-        metadata: xmlData
+        cnpj_id,
+        user_id: userId,
+        expiryDate: expiryDate,
+        metadata: xmlData as unknown as Record<string, unknown>
       });
 
       return filePath;
     } catch (error) {
       console.error(`❌ Error saving XML file: ${error}`);
-      
+
       // Create failed record in database
       await XML.create({
         fileName: `${xmlData.numeroNota || 'unknown'}.xml`,
@@ -285,10 +292,10 @@ class SiegService {
         status: 'failed',
         errorMessage: `Error saving file: ${error}`,
         downloadType,
-        cnpjId,
-        userId,
-        expiryDate: null,
-        metadata: xmlData
+        cnpj_id,
+        user_id: userId,
+        expiryDate: new Date(), // Default expiry date in case of error
+        metadata: xmlData as unknown as Record<string, unknown>
       });
 
       return null;
@@ -303,7 +310,7 @@ class SiegService {
     if (documentNumber) {
       const existingByNumber = await XML.findOne({
         where: {
-          cnpjId,
+          cnpj_id: cnpjId,
           documentNumber,
           status: 'success'
         }
@@ -317,7 +324,7 @@ class SiegService {
     // Check by metadata hash (stored in metadata field)
     const existingByHash = await XML.findOne({
       where: {
-        cnpjId,
+        cnpj_id: cnpjId,
         metadata: {
           xmlHash
         },
@@ -331,7 +338,11 @@ class SiegService {
   /**
    * Process XMLs for a specific CNPJ and date
    */
-  private async processXmlsForCnpjAndDate(userId: string, cnpjRecord: any, docType: string, date: string, downloadType: 'automatic' | 'manual') {
+  private async processXmlsForCnpjAndDate(userId: string, cnpjRecord: CNPJ, docType: string, date: string, downloadType: 'automatic' | 'manual') {
+    if (!cnpjRecord) {
+      console.error(`❌ CNPJ record is undefined`);
+      return { success: false, message: 'CNPJ record is undefined' };
+    }
     const user = await User.findByPk(userId);
     if (!user || !user.siegKey) {
       console.error(`❌ User ${userId} has no SIEG API key configured`);

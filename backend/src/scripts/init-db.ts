@@ -36,21 +36,10 @@ async function initDatabase() {
     CNPJ.belongsTo(User, {
       targetKey: 'id',
       foreignKey: 'userId',
-      as: 'cnpjUser' // Changed from 'user' to 'cnpjUser'
+      as: 'user'
     });
     
     // Add XML associations
-    CNPJ.hasMany(XML, {
-      sourceKey: 'id',
-      foreignKey: 'cnpjId',
-      as: 'xmls'
-    });
-    
-    XML.belongsTo(CNPJ, {
-      targetKey: 'id',
-      foreignKey: 'cnpjId',
-      as: 'xmlCnpj' // Changed from 'cnpj' to 'xmlCnpj'
-    });
     
     // Log models being synced
     console.log('Models to sync:');
@@ -60,7 +49,23 @@ async function initDatabase() {
     
     // Sync all models with database
     console.log('Syncing database models...');
+    
+    // Drop the 'xmls' table if it exists
+    try {
+      await sequelize.getQueryInterface().dropTable('xmls');
+      console.log("Dropped 'xmls' table.");
+    } catch (error) {
+      console.warn("Error dropping 'xmls' table (it might not exist yet):", error);
+    }
+
     await sequelize.sync({ force: true });
+
+    // Log the SQL for index creation (for debugging)
+    const xmlModel = sequelize.models.XML;
+    if (xmlModel) {
+      const indexes = await sequelize.getQueryInterface().showIndex(xmlModel.tableName);
+      console.log("Indexes for 'xmls' table:", indexes);
+    }
     
     // Log all tables after sync
     const tables = await sequelize.query(`

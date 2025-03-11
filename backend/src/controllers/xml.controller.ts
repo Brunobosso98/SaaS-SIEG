@@ -5,6 +5,7 @@ import User from '../models/user.model';
 import { Op } from 'sequelize';
 import path from 'path';
 import fs from 'fs';
+import { executeXmlDownload } from '../scripts/scheduled-xml-download';
 import SiegService from '../services/sieg.service';
 
 // Define request types
@@ -150,9 +151,6 @@ export const executeUserXmlDownload = async (req: AuthenticatedRequest, res: Res
   try {
     const userId = req.user.id;
     
-    // Import the function from the scheduled-xml-download script
-    const { executeXmlDownload } = require('../scripts/scheduled-xml-download');
-    
     // Execute the download
     const result = await executeXmlDownload(userId);
     
@@ -213,8 +211,8 @@ const createXmlRecord = async (userId: string, cnpjId: string, documentType: str
       downloadDate: new Date(),
       status: 'success',
       downloadType: 'manual',
-      cnpjId,
-      userId,
+      cnpj_id: cnpjId,
+      user_id: userId,
       expiryDate: new Date(Date.now() + (retentionDays * 24 * 60 * 60 * 1000)), // Based on retention days
       metadata: {
         requestParams: { documentType, startDate, endDate }
@@ -315,7 +313,7 @@ export const getXMLById = async (req: AuthenticatedRequest, res: Response): Prom
     
     // Find XML by ID and ensure it belongs to the authenticated user
     const xml = await XML.findOne({
-      where: { id: xmlId, userId },
+      where: { id: xmlId, user_id: userId },
       include: [{
         model: CNPJ,
         as: 'cnpj',
@@ -343,7 +341,7 @@ export const deleteXML = async (req: AuthenticatedRequest, res: Response): Promi
     
     // Find XML by ID and ensure it belongs to the authenticated user
     const xml = await XML.findOne({
-      where: { id: xmlId, userId }
+      where: { id: xmlId, user_id: userId }
     });
     
     if (!xml) {
@@ -370,7 +368,12 @@ export const viewXML = async (req: AuthenticatedRequest, res: Response): Promise
     
     // Find XML by ID and ensure it belongs to the authenticated user
     const xml = await XML.findOne({
-      where: { id: xmlId, userId }
+      where: { id: xmlId, user_id: userId },
+      include: [{
+        model: CNPJ,
+        as: 'cnpj',
+        attributes: ['cnpj']
+      }]
     });
     
     if (!xml) {

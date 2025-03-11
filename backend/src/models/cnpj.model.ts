@@ -52,7 +52,7 @@ CNPJ.init(
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
-      field: 'user_id', // Explicitly define the database column name
+      field: 'user_id',
       references: {
         model: 'users',
         key: 'id'
