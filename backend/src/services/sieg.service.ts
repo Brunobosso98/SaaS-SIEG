@@ -231,7 +231,7 @@ class SiegService {
       
       // Create full directory path
       const dirPath = path.join(
-        baseDir,
+        userId, // User ID as base directory in GitHub
         docConfig.baseDir,
         xmlData.tipoNota,
         xmlData.ano,
@@ -239,19 +239,43 @@ class SiegService {
         xmlData.cnpjEmit
       );
 
-      // Create directory if it doesn't exist
-      fs.mkdirSync(dirPath, { recursive: true });
-
       // Create file name and path
       const fileName = `${xmlData.numeroNota || 'unknown'}.xml`;
-      const filePath = path.join(dirPath, fileName);
+      let filePath = path.join(dirPath, fileName);
 
-      // Write XML content to file
-      fs.writeFileSync(filePath, xmlContent, 'utf8');
+      // GitHub repository details from environment variables
+      const githubUsername = process.env.GITHUB_USERNAME;
+      const githubRepo = process.env.GITHUB_REPO;
+      const githubToken = process.env.GITHUB_TOKEN;
 
-      // Get file size
-      const stats = fs.statSync(filePath);
-      const fileSize = stats.size;
+      if (!githubUsername || !githubRepo || !githubToken) {
+        throw new Error('GitHub credentials not configured in environment variables');
+      }
+
+      const githubApiPath = `/repos/${githubUsername}/${githubRepo}/contents/${filePath}`;
+      const githubApiUrl = `https://api.github.com${githubApiPath}`;
+
+      const contentBase64 = Buffer.from(xmlContent).toString('base64');
+
+      // Upload XML content to GitHub
+      const githubResponse = await axios.put(githubApiUrl, {
+        message: 'Upload XML file',
+        content: contentBase64,
+        branch: 'main' // or your default branch
+      }, {
+        headers: {
+          Authorization: `Bearer ${githubToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (githubResponse.status !== 201 && githubResponse.status !== 200) {
+        throw new Error(`Failed to upload to GitHub. Status: ${githubResponse.status}`);
+      }
+
+      const fileSize = Buffer.byteLength(xmlContent, 'utf8'); // Size in bytes
+      const githubFileUrl = `https://github.com/${githubUsername}/${githubRepo}/blob/main/${filePath}`; // Construct GitHub file URL
+      filePath = githubFileUrl; // Store GitHub URL as filePath
 
       // Calculate expiry date based on user's retention setting
       const retentionDays = user.settings?.downloadConfig?.retention || 30;
@@ -292,7 +316,7 @@ class SiegService {
         status: 'failed',
         errorMessage: `Error saving file: ${error}`,
         downloadType,
-        cnpj_id,
+        cnpj_id: cnpj_id,
         user_id: userId,
         expiryDate: new Date(), // Default expiry date in case of error
         metadata: xmlData as unknown as Record<string, unknown>
